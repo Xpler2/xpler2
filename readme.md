@@ -66,3 +66,7 @@ class MainActivity : Activity() {
       public static **(io.github.xpler2.XplerModuleInterface);
   }
   ```
+
+## 致谢
+
+- [EzXHelper](https://github.com/KyuubiRan/EzXHelper) - onBefore 和 onAfter 分发机制来源于该项目

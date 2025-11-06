@@ -49,13 +49,14 @@ class Xpler2ModuleInitMethodVisitor(
         if (!initial.xposed) return
 
         val className = initial.xposedInit.replace(".", "/")
+        val xposed = "io/github/xpler2/base/XposedEntrance"
         ClassWriter(ClassWriter.COMPUTE_FRAMES or ClassWriter.COMPUTE_MAXS).apply {
             visit(
                 Opcodes.V17,
                 Opcodes.ACC_PUBLIC or Opcodes.ACC_STATIC or Opcodes.ACC_FINAL or Opcodes.ACC_SUPER,
                 className,
                 null,
-                "io/github/xpler2/base/BaseXposedModule",
+                xposed,
                 null,
             )
 
@@ -71,7 +72,7 @@ class Xpler2ModuleInitMethodVisitor(
                 visitVarInsn(Opcodes.ALOAD, 0)
                 visitMethodInsn(
                     Opcodes.INVOKESPECIAL,
-                    "io/github/xpler2/base/BaseXposedModule",
+                    xposed,
                     "<init>",
                     "()V",
                     false
@@ -98,7 +99,7 @@ class Xpler2ModuleInitMethodVisitor(
                 visitVarInsn(Opcodes.ALOAD, 1)
                 visitMethodInsn(
                     Opcodes.INVOKESPECIAL,
-                    "io/github/xpler2/base/BaseXposedModule",
+                    xposed,
                     "handleLoadPackage",
                     "(Lde/robv/android/xposed/callbacks/XC_LoadPackage\$LoadPackageParam;)V",
                     false
@@ -136,13 +137,14 @@ class Xpler2ModuleInitMethodVisitor(
         if (!initial.lsposed) return
 
         val className = initial.lsposedInit.replace(".", "/")
+        val lsposed = "io/github/xpler2/base/LsposedEntrance"
         ClassWriter(ClassWriter.COMPUTE_FRAMES or ClassWriter.COMPUTE_MAXS).apply {
             visit(
                 Opcodes.V17,
                 Opcodes.ACC_PUBLIC or Opcodes.ACC_STATIC or Opcodes.ACC_FINAL or Opcodes.ACC_SUPER,
                 className,
                 null,
-                "io/github/xpler2/base/BaseLsposedModule",
+                lsposed,
                 null,
             )
 
@@ -160,7 +162,7 @@ class Xpler2ModuleInitMethodVisitor(
                 visitVarInsn(Opcodes.ALOAD, 2)
                 visitMethodInsn(
                     Opcodes.INVOKESPECIAL,
-                    "io/github/xpler2/base/BaseLsposedModule",
+                    lsposed,
                     "<init>",
                     "(Lio/github/libxposed/api/XposedInterface;Lio/github/libxposed/api/XposedModuleInterface\$ModuleLoadedParam;)V",
                     false
@@ -187,7 +189,7 @@ class Xpler2ModuleInitMethodVisitor(
                 visitVarInsn(Opcodes.ALOAD, 1)
                 visitMethodInsn(
                     Opcodes.INVOKESPECIAL,
-                    "io/github/xpler2/base/BaseLsposedModule",
+                    lsposed,
                     "onPackageLoaded",
                     "(Lio/github/libxposed/api/XposedModuleInterface\$PackageLoadedParam;)V",
                     false

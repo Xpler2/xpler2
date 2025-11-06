@@ -3,54 +3,16 @@ package io.github.xpler2
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageInfo
+import android.content.res.Resources
 import android.os.ParcelFileDescriptor
 import io.github.xpler2.callback.HookerCallback
-import io.github.xpler2.callback.HookerFunction
 import io.github.xpler2.params.UnhookParams
+import java.io.FileNotFoundException
 import java.lang.reflect.Constructor
-import java.lang.reflect.Member
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 
-// module
-lateinit var xplerModule: XplerModuleInterface
-
-// store hook
-val hookerCallbacks = mutableMapOf<Member, HookerFunction>()
-
-// log
-fun Context.logger(message: String) = logger(message, null)
-
-fun Context.logger(message: String, throwable: Throwable?) {
-    XplerLogger.logger(message, throwable)
-}
-
 interface XplerModuleInterface {
-    /**
-     * Hook method
-     * ```
-     * hooker(Application::class.java.getDeclaredMethod("attach", Context::class.java)) {
-     *   onBefore {
-     *     log("onBefore:$this")
-     *   }
-     *   onAfter {
-     *     log("onAfter:$this")
-     *   }
-     * }
-     * ```
-     * @param method method
-     * @param callback callback
-     */
-    fun hooker(
-        method: Method,
-        callback: HookerFunction.() -> Unit,
-    ): UnhookParams?
-
-    fun hooker(
-        method: Method,
-        priority: Int,
-        callback: HookerFunction.() -> Unit,
-    ): UnhookParams?
-
     /**
      * Hook method
      * ```
@@ -75,32 +37,6 @@ interface XplerModuleInterface {
         method: Method,
         priority: Int,
         callback: HookerCallback,
-    ): UnhookParams?
-
-    /**
-     * Hook constructor
-     * ```
-     * hooker(Application::class.java.getConstructor()) {
-     *   onBefore {
-     *     log("onBefore:$this")
-     *   }
-     *   onAfter {
-     *     log("onAfter:$this")
-     *   }
-     * }
-     * ```
-     * @param method constructor
-     * @param callback callback
-     */
-    fun hooker(
-        method: Constructor<*>,
-        callback: HookerFunction.() -> Unit,
-    ): UnhookParams?
-
-    fun hooker(
-        method: Constructor<*>,
-        priority: Int,
-        callback: HookerFunction.() -> Unit,
     ): UnhookParams?
 
     /**
@@ -129,9 +65,7 @@ interface XplerModuleInterface {
         callback: HookerCallback,
     ): UnhookParams?
 
-    /**
-     * Get all unhook
-     */
+    // Get all unhook
     val unhooks: List<UnhookParams>
 
     /// wrapper
@@ -151,37 +85,86 @@ interface XplerModuleInterface {
 
     val processName: String
 
-    val modulePackageName: String?
+    val moduleApplicationId: String?
 
     val modulePath: String?
 
     fun modulePackageInfo(context: Context): PackageInfo?
 
+    fun moduleResources(context: Context): Resources?
+
+    fun injectResource(resources: Resources)
+
+    @Throws(UnsupportedOperationException::class)
     fun deoptimize(method: Method): Boolean
 
+    @Throws(UnsupportedOperationException::class)
     fun <T> deoptimize(constructor: Constructor<T>): Boolean
 
+    @Throws(
+        InvocationTargetException::class,
+        IllegalArgumentException::class,
+        IllegalAccessException::class,
+        UnsupportedOperationException::class,
+    )
     fun invokeOrigin(method: Method, instance: Any, vararg args: Any?): Any?
 
+    @Throws(
+        InvocationTargetException::class,
+        IllegalArgumentException::class,
+        IllegalAccessException::class,
+        UnsupportedOperationException::class,
+    )
     fun <T> invokeOrigin(constructor: Constructor<T>, instance: T, vararg args: Any?)
 
+    @Throws(
+        InvocationTargetException::class,
+        IllegalArgumentException::class,
+        IllegalAccessException::class,
+        UnsupportedOperationException::class,
+    )
     fun invokeSpecial(method: Method, instance: Any, vararg args: Any?): Any?
 
+    @Throws(
+        InvocationTargetException::class,
+        IllegalArgumentException::class,
+        IllegalAccessException::class,
+        UnsupportedOperationException::class,
+    )
     fun <T> invokeSpecial(method: Constructor<T>, instance: T, vararg args: Any?)
 
+    @Throws(
+        InvocationTargetException::class,
+        IllegalArgumentException::class,
+        IllegalAccessException::class,
+        InstantiationException::class,
+        UnsupportedOperationException::class,
+    )
     fun <T> newInstanceOrigin(constructor: Constructor<T>, vararg args: Any): T
 
+    @Throws(
+        InvocationTargetException::class,
+        IllegalArgumentException::class,
+        IllegalAccessException::class,
+        InstantiationException::class,
+        UnsupportedOperationException::class,
+    )
     fun <T, U> newInstanceSpecial(constructor: Constructor<T>, subClass: Class<U>, vararg args: Any): U
 
+    @Throws(UnsupportedOperationException::class)
     fun getRemotePreferences(group: String): SharedPreferences
 
+    @Throws(UnsupportedOperationException::class)
     fun listRemoteFiles(): Array<String>
 
+    @Throws(FileNotFoundException::class, UnsupportedOperationException::class)
     fun openRemoteFile(name: String): ParcelFileDescriptor
 
     fun log(message: String, throwable: Throwable?)
 
     fun log(message: String)
+
+    fun logStackTraceString()
 
     fun stackTraceString(): String
 }

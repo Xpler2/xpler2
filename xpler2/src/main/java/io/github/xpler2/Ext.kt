@@ -1,12 +1,75 @@
-package io.github.xpler2.hooker
+package io.github.xpler2
 
-import io.github.xpler2.callback.HookerFunction
+import android.content.Context
 import io.github.xpler2.callback.HookerCallback
+import io.github.xpler2.callback.HookerFunction
+import io.github.xpler2.callback.HookerFunctionImpl
+import io.github.xpler2.params.AfterParams
+import io.github.xpler2.params.BeforeParams
 import io.github.xpler2.params.UnhookParams
-import io.github.xpler2.xplerModule
 import java.lang.reflect.Constructor
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
+
+internal lateinit var xplerModule: XplerModuleInterface
+
+fun Context.logger(message: String) = logger(message, null)
+
+fun Context.logger(message: String, throwable: Throwable?) {
+    XplerLogger.logger(message, throwable)
+}
+
+fun XplerModuleInterface.hooker(method: Method, callback: HookerFunction.() -> Unit): UnhookParams? {
+    val impl = HookerFunctionImpl().apply(callback)
+    return xplerModule.hooker(method, object : HookerCallback() {
+        override fun onBefore(params: BeforeParams) {
+            impl.beforeParamsInner?.invoke(params)
+        }
+
+        override fun onAfter(params: AfterParams) {
+            impl.afterParamsInner?.invoke(params)
+        }
+    })
+}
+
+fun XplerModuleInterface.hooker(method: Method, priority: Int, callback: HookerFunction.() -> Unit): UnhookParams? {
+    val impl = HookerFunctionImpl().apply(callback)
+    return xplerModule.hooker(method, priority, object : HookerCallback() {
+        override fun onBefore(params: BeforeParams) {
+            impl.beforeParamsInner?.invoke(params)
+        }
+
+        override fun onAfter(params: AfterParams) {
+            impl.afterParamsInner?.invoke(params)
+        }
+    })
+}
+
+fun XplerModuleInterface.hooker(constructor: Constructor<*>, callback: HookerFunction.() -> Unit): UnhookParams? {
+    val impl = HookerFunctionImpl().apply(callback)
+    return xplerModule.hooker(constructor, object : HookerCallback() {
+        override fun onBefore(params: BeforeParams) {
+            impl.beforeParamsInner?.invoke(params)
+        }
+
+        override fun onAfter(params: AfterParams) {
+            impl.afterParamsInner?.invoke(params)
+        }
+    })
+}
+
+fun XplerModuleInterface.hooker(constructor: Constructor<*>, priority: Int, callback: HookerFunction.() -> Unit): UnhookParams? {
+    val impl = HookerFunctionImpl().apply(callback)
+    return xplerModule.hooker(constructor, priority, object : HookerCallback() {
+        override fun onBefore(params: BeforeParams) {
+            impl.beforeParamsInner?.invoke(params)
+        }
+
+        override fun onAfter(params: AfterParams) {
+            impl.afterParamsInner?.invoke(params)
+        }
+    })
+}
 
 /**
  * Hook method
@@ -51,6 +114,7 @@ fun Method.hooker(callback: HookerFunction.() -> Unit): UnhookParams? {
 }
 
 fun Method.hooker(priority: Int, callback: HookerFunction.() -> Unit): UnhookParams? {
+    val impl = HookerFunctionImpl().apply(callback)
     return xplerModule.hooker(this, priority, callback)
 }
 

@@ -6,7 +6,7 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 
 // Inject the module applicationId
-class Xpler2ModuleAppIdMethodVisitor(
+class Xpler2ModuleApplicationIdMethodVisitor(
     api: Int,
     methodVisitor: MethodVisitor,
     private val ownerName: String,

@@ -5,15 +5,14 @@ import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import io.github.xpler2.XplerModuleInterface
-import io.github.xpler2.impl.LsposedM
 import io.github.xpler2.xplerModule
 
-// BaseXposedModule
-abstract class BaseLsposedModule(
+// LsposedEntrance
+abstract class LsposedEntrance(
     base: XposedInterface,
     param: XposedModuleInterface.ModuleLoadedParam,
 ) : XposedModule(base, param) {
-    private var mModule: LsposedM = LsposedM(base).also {
+    private var mModule: LsposedModule = LsposedModule(base).also {
         it.mProcessName = param.processName
         xplerModule = it
     }

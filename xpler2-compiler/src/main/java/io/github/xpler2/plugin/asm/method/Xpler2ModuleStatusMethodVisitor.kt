@@ -28,18 +28,20 @@ class Xpler2ModuleStatusMethodVisitor(
                 // If the method is `getInstance` of `XplerModuleStatus`, replace it with `LsposedStatus.INSTANCE`
                 mv.visitFieldInsn(
                     Opcodes.GETSTATIC,
-                    "io/github/xpler2/impl/LsposedStatus",
+                    "io/github/xpler2/base/LsposedStatus",
                     "INSTANCE",
-                    "Lio/github/xpler2/impl/LsposedStatus;"
+                    "Lio/github/xpler2/base/LsposedStatus;"
                 )
-            } else {
+            } else if (initial.xposed) {
                 // If the method is `getInstance` of `XplerModuleStatus`, replace it with `XposedStatus.INSTANCE`
                 mv.visitFieldInsn(
                     Opcodes.GETSTATIC,
-                    "io/github/xpler2/impl/XposedStatus",
+                    "io/github/xpler2/base/XposedStatus",
                     "INSTANCE",
-                    "Lio/github/xpler2/impl/XposedStatus;"
+                    "Lio/github/xpler2/base/XposedStatus;"
                 )
+            } else {
+                // todo
             }
         }
 

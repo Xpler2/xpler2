@@ -31,7 +31,7 @@ abstract class Xpler2AsmVisitorFactory : AsmClassVisitorFactory<Xpler2AsmVisitor
 
     override fun createClassVisitor(
         classContext: ClassContext,
-        nextClassVisitor: ClassVisitor
+        nextClassVisitor: ClassVisitor,
     ): ClassVisitor {
         val params = parameters.get()
         val initializeCache = XplerInitializeCache.cache(params.cacheDirectory)
@@ -54,8 +54,9 @@ abstract class Xpler2AsmVisitorFactory : AsmClassVisitorFactory<Xpler2AsmVisitor
             .replace(".kt", "Kt")
             .replace(File.separator, ".")
 
-        return (classData.className.indexOf("io.github.libxposed") != -1
-                || classData.className.indexOf("io.github.xpler2") != -1
+        return (classData.className.indexOf("io.github.libxposed.") != -1
+                || classData.className.indexOf("io.github.xpler2.") != -1
+                || classData.interfaces.indexOfFirst { it.startsWith("io.github.xpler2.") } != -1
                 || sourceName.indexOf(classData.className) != -1)
     }
 }

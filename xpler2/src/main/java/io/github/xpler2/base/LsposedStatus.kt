@@ -1,4 +1,4 @@
-package io.github.xpler2.impl
+package io.github.xpler2.base
 
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper

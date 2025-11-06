@@ -3,7 +3,7 @@ package io.github.xpler_example.module
 import android.util.Log
 import io.github.xpler2.XplerInitialize
 import io.github.xpler2.XplerModuleInterface
-import io.github.xpler2.hooker.hooker
+import io.github.xpler2.hooker
 
 @XplerInitialize(
     name = "InitKt",
@@ -19,7 +19,7 @@ fun init(module: XplerModuleInterface) {
         if (!module.isFirstPackage) return // skip if not the first package
         if (module.packageName != "com.tencent.mm") return // skip if not the target package
         if (module.processName.indexOf(":") != -1) return // skip sub-processes
-        Log.i("Xpler2", "[Xpler2]Kotlin-> init called in `${module.packageName}` process: ${module.processName}")
+        Log.i("Xpler2", "[Xpler2]Kotlin-> init called in packageName: `${module.packageName}`, process: ${module.processName}")
 
         val tinkerApplicationClazz = module.classLoader.loadClass("com.tencent.tinker.loader.app.TinkerApplication")
         val onCreateMethod = tinkerApplicationClazz.getDeclaredMethod("onCreate")
@@ -27,14 +27,10 @@ fun init(module: XplerModuleInterface) {
         onCreateMethod.hooker {
             onBefore {
                 module.log("[Xpler2]Kotlin-> onCreate called in TinkerApplication: $this")
-                module.log("[Xpler2]Kotlin-> before unhooks: ${module.unhooks}")
-                unhook?.unhook()
-                module.log("[Xpler2]Kotlin-> unhook TinkerApplication onCreate.")
             }
 
             onAfter {
                 module.log("[Xpler2]Kotlin-> TinkerApplication onCreate finished.")
-                module.log("[Xpler2]Kotlin-> after all unhooks: ${module.unhooks}")
             }
         }
     } catch (e: Throwable) {

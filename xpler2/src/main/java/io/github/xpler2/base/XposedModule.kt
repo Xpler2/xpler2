@@ -1,4 +1,4 @@
-package io.github.xpler2.impl
+package io.github.xpler2.base
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -11,118 +11,103 @@ import android.util.Log
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
-import io.github.xpler2.XplerModuleInterface
 import io.github.xpler2.callback.HookerCallback
-import io.github.xpler2.callback.HookerFunction
-import io.github.xpler2.callback.HookerFunctionImpl
-import io.github.xpler2.hookerCallbacks
+import io.github.xpler2.params.AfterParams
+import io.github.xpler2.params.BeforeParams
 import io.github.xpler2.params.UnhookParams
 import java.io.File
-import java.io.FileNotFoundException
 import java.lang.reflect.Constructor
-import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Member
 import java.lang.reflect.Method
 
-internal class XposedM(
+internal class XposedModule(
     private val mStartupParam: IXposedHookZygoteInit.StartupParam,
-) : XplerModuleInterface {
+) : BaseModule() {
     var mIsFirstPackage: Boolean = false
     lateinit var mClassloader: ClassLoader
     lateinit var mPackageName: String
     lateinit var mProcessName: String
-    private val mUnhooks by lazy { mutableListOf<UnhookParams>() }
+
+    class Hooker(priority: Int) : XC_MethodHook(priority) {
+        private val isSkipped = ThreadLocal
+            .withInitial { mutableMapOf<Member, Boolean>() }
+
+        override fun beforeHookedMethod(param: MethodHookParam) {
+            HookerStore.hookers[param.method]?.dispatchBefore(
+                BeforeParams(
+                    mMember = { param.method },
+                    mArgs = { param.args },
+                    mInstance = { param.thisObject },
+                    mReturnAndSkip = {
+                        isSkipped.get()?.put(param.method, true)
+                        param.result = it
+                    },
+                    mThrowAndSkip = {
+                        isSkipped.get()?.put(param.method, true)
+                        param.throwable = it
+                    },
+                )
+            )
+        }
+
+        override fun afterHookedMethod(param: MethodHookParam) {
+            HookerStore.hookers[param.method]?.dispatchAfter(
+                AfterParams(
+                    mMember = { param.method },
+                    mArgs = { param.args },
+                    mInstance = { param.thisObject },
+                    mResult = { param.result },
+                    mThrowable = { param.throwable },
+                    mIsSkipped = { isSkipped.get()?.get(param.method) == true },
+                    mSetResult = { param.result = it },
+                    mSetThrowable = { param.throwable = it }
+                )
+            )
+        }
+    }
 
     private fun buildXposedHookerCallbackImpl(
-        method: Member,
+        target: Member,
         priority: Int, // PRIORITY_DEFAULT = 50
-        callback: HookerFunction.() -> Unit,
+        callback: HookerCallback,
     ): UnhookParams? {
-        val impl = HookerFunctionImpl()
-            .also { hookerCallbacks[method] = it }
-            .apply(callback)
+        val factory = HookerStore.computeIfAbsent(target, HookerFactory(target) {
+            val unhookOriginal = when (target) {
+                is Method -> XposedBridge.hookMethod(target, Hooker(priority))
+                is Constructor<*> -> XposedBridge.hookMethod(target, Hooker(priority))
+                else -> throw IllegalArgumentException("Unsupported member type: $target")
+            }
+            UnhookParams(
+                mOrigin = { unhookOriginal.hookedMethod },
+                mUnhook = { unhookOriginal.unhook() },
+            )
+        })
 
-        val unhookOriginal = XposedBridge.hookMethod(method, XposedHooker(priority))
-
-        return UnhookParams(
-            mOrigin = { unhookOriginal.hookedMethod },
-            mUnhook = { unhookOriginal.unhook() },
-        ).also {
-            impl.unhookParamsInner = it
-            mUnhooks.add(it)
-        }
+        return factory.register(priority, callback) { if (factory.isEmpty()) HookerStore.remove(target) }
+            .also { mUnhooks.add(it) }
     }
 
     override fun hooker(
         method: Method,
-        callback: HookerFunction.() -> Unit
+        callback: HookerCallback,
     ) = buildXposedHookerCallbackImpl(method, XC_MethodHook.PRIORITY_DEFAULT, callback)
 
     override fun hooker(
         method: Method,
         priority: Int,
-        callback: HookerFunction.() -> Unit
-    ) = buildXposedHookerCallbackImpl(method, priority, callback)
-
-    override fun hooker(
-        method: Method,
-        callback: HookerCallback
-    ): UnhookParams? {
-        return hooker(method) {
-            callback.unhookParamsInner = { this.unhook }
-            onBefore { callback.onBefore(this) }
-            onAfter { callback.onAfter(this) }
-        }
-    }
-
-    override fun hooker(
-        method: Method,
-        priority: Int,
-        callback: HookerCallback
-    ): UnhookParams? {
-        return hooker(method, priority) {
-            callback.unhookParamsInner = { this.unhook }
-            onBefore { callback.onBefore(this) }
-            onAfter { callback.onAfter(this) }
-        }
-    }
-
-    override fun hooker(
-        method: Constructor<*>,
-        callback: HookerFunction.() -> Unit
-    ) = buildXposedHookerCallbackImpl(method, XC_MethodHook.PRIORITY_DEFAULT, callback)
-
-    override fun hooker(
-        method: Constructor<*>,
-        priority: Int,
-        callback: HookerFunction.() -> Unit
+        callback: HookerCallback,
     ) = buildXposedHookerCallbackImpl(method, priority, callback)
 
     override fun hooker(
         constructor: Constructor<*>,
-        callback: HookerCallback
-    ): UnhookParams? {
-        return hooker(constructor) {
-            callback.unhookParamsInner = { this.unhook }
-            onBefore { callback.onBefore(this) }
-            onAfter { callback.onAfter(this) }
-        }
-    }
+        callback: HookerCallback,
+    ) = buildXposedHookerCallbackImpl(constructor, XC_MethodHook.PRIORITY_DEFAULT, callback)
 
     override fun hooker(
         constructor: Constructor<*>,
         priority: Int,
-        callback: HookerCallback
-    ): UnhookParams? {
-        return hooker(constructor, priority) {
-            callback.unhookParamsInner = { this.unhook }
-            onBefore { callback.onBefore(this) }
-            onAfter { callback.onAfter(this) }
-        }
-    }
-
-    override val unhooks: List<UnhookParams>
-        get() = mUnhooks
+        callback: HookerCallback,
+    ) = buildXposedHookerCallbackImpl(constructor, priority, callback)
 
     override val api: Int
         get() = XposedBridge.getXposedVersion()
@@ -152,9 +137,6 @@ internal class XposedM(
     override val processName: String
         get() = mProcessName
 
-    override val modulePackageName: String?
-        get() = null // ASM bytecode injection will be implemented by the xpler2-compiler plugin.
-
     override val modulePath: String?
         get() = mStartupParam.modulePath
 
@@ -171,93 +153,46 @@ internal class XposedM(
         }
     }
 
-    @Throws(UnsupportedOperationException::class)
     override fun deoptimize(method: Method): Boolean {
         throw UnsupportedOperationException("current xposed api does not support `deoptimize`")
     }
 
-    @Throws(UnsupportedOperationException::class)
     override fun <T> deoptimize(constructor: Constructor<T>): Boolean {
         throw UnsupportedOperationException("current xposed api does not support `deoptimize`")
     }
 
-    @Throws(
-        InvocationTargetException::class,
-        IllegalArgumentException::class,
-        IllegalAccessException::class,
-        UnsupportedOperationException::class,
-    )
     override fun invokeOrigin(method: Method, instance: Any, vararg args: Any?): Any? {
         return XposedBridge.invokeOriginalMethod(method, instance, args)
     }
 
-    @Throws(
-        InvocationTargetException::class,
-        IllegalArgumentException::class,
-        IllegalAccessException::class,
-        UnsupportedOperationException::class,
-    )
     override fun <T> invokeOrigin(constructor: Constructor<T>, instance: T, vararg args: Any?) {
         XposedBridge.invokeOriginalMethod(constructor, instance, args)
     }
 
-    @Throws(
-        InvocationTargetException::class,
-        IllegalArgumentException::class,
-        IllegalAccessException::class,
-        UnsupportedOperationException::class,
-    )
     override fun invokeSpecial(method: Method, instance: Any, vararg args: Any?): Any? {
         throw UnsupportedOperationException("current xposed api does not support `invokeSpecial`")
     }
 
-    @Throws(
-        InvocationTargetException::class,
-        IllegalArgumentException::class,
-        IllegalAccessException::class,
-        UnsupportedOperationException::class,
-    )
     override fun <T> invokeSpecial(method: Constructor<T>, instance: T, vararg args: Any?) {
         throw UnsupportedOperationException("current xposed api does not support `invokeSpecial`")
     }
 
-    @Throws(
-        InvocationTargetException::class,
-        IllegalArgumentException::class,
-        IllegalAccessException::class,
-        InstantiationException::class,
-        UnsupportedOperationException::class,
-    )
     override fun <T> newInstanceOrigin(constructor: Constructor<T>, vararg args: Any): T {
         throw UnsupportedOperationException("current xposed api does not support `newInstanceOrigin`")
     }
 
-    @Throws(
-        InvocationTargetException::class,
-        IllegalArgumentException::class,
-        IllegalAccessException::class,
-        InstantiationException::class,
-        UnsupportedOperationException::class,
-    )
-    override fun <T, U> newInstanceSpecial(
-        constructor: Constructor<T>,
-        subClass: Class<U>,
-        vararg args: Any
-    ): U {
+    override fun <T, U> newInstanceSpecial(constructor: Constructor<T>, subClass: Class<U>, vararg args: Any): U {
         throw UnsupportedOperationException("current xposed api does not support `newInstanceSpecial`")
     }
 
-    @Throws(UnsupportedOperationException::class)
     override fun getRemotePreferences(group: String): SharedPreferences {
         throw UnsupportedOperationException("current xposed api does not support `getRemotePreferences`")
     }
 
-    @Throws(UnsupportedOperationException::class)
     override fun listRemoteFiles(): Array<String> {
         throw UnsupportedOperationException("current xposed api does not support `listRemoteFiles`")
     }
 
-    @Throws(FileNotFoundException::class, UnsupportedOperationException::class)
     override fun openRemoteFile(name: String): ParcelFileDescriptor {
         throw UnsupportedOperationException("current xposed api does not support `openRemoteFile`")
     }
@@ -270,6 +205,8 @@ internal class XposedM(
     }
 
     override fun log(message: String) = log(message, null)
+
+    override fun logStackTraceString() = log(stackTraceString())
 
     override fun stackTraceString(): String {
         return Log.getStackTraceString(RuntimeException("stackTraceString"))

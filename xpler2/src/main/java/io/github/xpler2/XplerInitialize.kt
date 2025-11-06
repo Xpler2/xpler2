@@ -6,7 +6,7 @@ package io.github.xpler2
  * such as its name, description, scope, and support for Xposed and Lsposed frameworks.
  *
  * ```
- * // java example:
+ * // ---------------- java example:
  * package com.example;
  *
  * public class InitJava {
@@ -22,8 +22,7 @@ package io.github.xpler2
  *      }
  * }
  *
- * // ----------------------------------------------------------------------------------
- * // kotlin example1:
+ * // ---------------- kotlin example1:
  * package com.example
  *
  * @XplerInitialize(
@@ -37,8 +36,7 @@ package io.github.xpler2
  *    module.log("Kotlin module initialized")
  * }
  *
- * // ----------------------------------------------------------------------------------
- * // kotlin example2:
+ * // ---------------- kotlin example2:
  * package com.example
  *
  * class InitKotlin {
@@ -120,9 +118,9 @@ annotation class XplerInitialize(
     /**
      * Does it support the old version annotation API
      * ```
-     *  io.github.libxposed.api.annotations.AfterInvocation
-     *  io.github.libxposed.api.annotations.BeforeInvocation
-     *  io.github.libxposed.api.annotations.XposedHooker
+     *  @io.github.libxposed.api.annotations.AfterInvocation
+     *  @io.github.libxposed.api.annotations.BeforeInvocation
+     *  @io.github.libxposed.api.annotations.XposedHooker
      * ```
      */
     val lsposedCompatAnnotation: Boolean = true

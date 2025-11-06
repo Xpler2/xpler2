@@ -1,7 +1,7 @@
 package io.github.xpler2.plugin.asm
 
+import io.github.xpler2.plugin.asm.method.Xpler2ModuleApplicationIdMethodVisitor
 import io.github.xpler2.plugin.asm.method.Xpler2ModuleInitMethodVisitor
-import io.github.xpler2.plugin.asm.method.Xpler2ModuleAppIdMethodVisitor
 import io.github.xpler2.plugin.asm.method.Xpler2ModuleStatusMethodVisitor
 import io.github.xpler2.plugin.compiler.bean.XplerInitializeBean
 import io.github.xpler2.plugin.compiler.bean.XplerInitializeCache
@@ -30,7 +30,7 @@ class Xpler2ClassVisitor(
         name: String,
         signature: String?,
         superName: String?,
-        interfaces: Array<out String?>?
+        interfaces: Array<out String?>?,
     ) {
         mOwnerName = name.replace('/', '.')
         mSuperName = superName?.replace('/', '.')
@@ -54,7 +54,7 @@ class Xpler2ClassVisitor(
         name: String,
         descriptor: String,
         signature: String?,
-        exceptions: Array<out String?>?
+        exceptions: Array<out String?>?,
     ): MethodVisitor? {
         // if only one parameter, check if it is a XplerModuleInterface or XposedInterface.BeforeHookCallback or XposedInterface.AfterHookCallback
         val isPublicStatic = Opcodes.ACC_PUBLIC and access != 0 && Opcodes.ACC_STATIC and access != 0
@@ -83,12 +83,9 @@ class Xpler2ClassVisitor(
             )
         }
 
-        // if the method is `getModulePackageName` and the owner is `XposedM` or `LsposedM`, handle it.
-        if (name == "getModulePackageName"
-            && (mOwnerName == "io.github.xpler2.impl.XposedM"
-                    || mOwnerName == "io.github.xpler2.impl.LsposedM")
-        ) {
-            return Xpler2ModuleAppIdMethodVisitor(
+        // if the method is `getModuleApplicationId` and the owner is `BaseModule`, handle it.
+        if (name == "getModuleApplicationId" && mOwnerName == "io.github.xpler2.base.BaseModule") {
+            return Xpler2ModuleApplicationIdMethodVisitor(
                 api = api,
                 methodVisitor = super.visitMethod(
                     access,

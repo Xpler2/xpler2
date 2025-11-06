@@ -37,6 +37,7 @@ interface XplerModuleStatus {
     /**
      * The scope of the module.
      */
+    @get:Throws(UnsupportedOperationException::class)
     val scope: List<String>
 
     /**
@@ -45,6 +46,7 @@ interface XplerModuleStatus {
      * @param packageName The name of the package to remove.
      * @return The removed package name, or null if not found.
      */
+    @Throws(UnsupportedOperationException::class)
     fun removeScope(packageName: String): String?
 
     /**
@@ -52,30 +54,36 @@ interface XplerModuleStatus {
      *
      * @param packageName The name of the package to request scope for.
      */
+    @Throws(UnsupportedOperationException::class)
     fun requestScope(packageName: String)
 
     /**
      * Get remote preferences from Xposed framework. If the group does not exist, it will be created.
      */
+    @Throws(UnsupportedOperationException::class)
     fun getRemotePreferences(group: String)
 
     /**
      * Delete a group of remote preferences.
      */
+    @Throws(UnsupportedOperationException::class)
     fun deleteRemotePreferences(group: String)
 
     /**
      * List all files in the module's shared data directory.
      */
+    @Throws(UnsupportedOperationException::class)
     fun listRemoteFiles(): Array<String>
 
     /**
      * Open a file in the module's shared data directory. The file will be created if not exists.
      */
+    @Throws(UnsupportedOperationException::class)
     fun openRemoteFile(name: String)
 
     /**
      * Delete a file in the module's shared data directory.
      */
+    @Throws(UnsupportedOperationException::class)
     fun deleteRemoteFile(name: String)
 }

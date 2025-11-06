@@ -1,4 +1,4 @@
-package io.github.xpler2.impl
+package io.github.xpler2.base
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -9,122 +9,102 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import io.github.libxposed.api.XposedInterface
-import io.github.xpler2.XplerModuleInterface
+import io.github.libxposed.api.annotations.AfterInvocation
+import io.github.libxposed.api.annotations.BeforeInvocation
+import io.github.libxposed.api.annotations.XposedHooker
 import io.github.xpler2.callback.HookerCallback
-import io.github.xpler2.callback.HookerFunction
-import io.github.xpler2.callback.HookerFunctionImpl
-import io.github.xpler2.hookerCallbacks
+import io.github.xpler2.params.AfterParams
+import io.github.xpler2.params.BeforeParams
 import io.github.xpler2.params.UnhookParams
 import java.io.File
-import java.io.FileNotFoundException
 import java.lang.reflect.Constructor
-import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Member
 import java.lang.reflect.Method
 
-internal class LsposedM(
+internal class LsposedModule(
     private val mXposedInterface: XposedInterface,
-) : XplerModuleInterface {
+) : BaseModule() {
     var mIsFirstPackage: Boolean = false
     lateinit var mClassloader: ClassLoader
     lateinit var mPackageName: String
     lateinit var mProcessName: String
-    private val mUnhooks by lazy { mutableListOf<UnhookParams>() }
+
+    @XposedHooker
+    object Hooker : XposedInterface.Hooker {
+        @JvmStatic
+        @BeforeInvocation
+        fun before(callback: XposedInterface.BeforeHookCallback) {
+            HookerStore.hookers[callback.member]?.dispatchBefore(
+                BeforeParams(
+                    mMember = { callback.member },
+                    mArgs = { callback.args },
+                    mInstance = { callback.thisObject },
+                    mReturnAndSkip = { callback.returnAndSkip(it) },
+                    mThrowAndSkip = { callback.throwAndSkip(it) },
+                )
+            )
+        }
+
+        @JvmStatic
+        @AfterInvocation
+        fun after(callback: XposedInterface.AfterHookCallback) {
+            HookerStore.hookers[callback.member]?.dispatchAfter(
+                AfterParams(
+                    mMember = { callback.member },
+                    mArgs = { callback.args },
+                    mInstance = { callback.thisObject },
+                    mResult = { callback.result },
+                    mThrowable = { callback.throwable },
+                    mIsSkipped = { callback.isSkipped },
+                    mSetResult = { callback.result = it },
+                    mSetThrowable = { callback.throwable = it }
+                )
+            )
+        }
+    }
 
     private fun <T : Member> buildLsposedHookerCallbackImpl(
-        method: T,
+        target: T,
         priority: Int, // PRIORITY_DEFAULT = 50
-        callback: HookerFunction.() -> Unit,
+        callback: HookerCallback,
     ): UnhookParams? {
-        val impl = HookerFunctionImpl()
-            .also { hookerCallbacks[method] = it }
-            .apply(callback)
+        val factory = HookerStore.computeIfAbsent(target, HookerFactory(target) {
+            val unhookOriginal = when (target) {
+                is Method -> mXposedInterface.hook(target, priority, Hooker::class.java)
+                is Constructor<*> -> mXposedInterface.hook(target, priority, Hooker::class.java)
+                else -> throw IllegalArgumentException("Unsupported member type: $target")
+            }
+            UnhookParams(
+                mOrigin = { unhookOriginal.origin },
+                mUnhook = { unhookOriginal.unhook() },
+            )
+        })
 
-        val unhookOriginal = when (method) {
-            is Method -> mXposedInterface.hook(method, priority, LsposedHooker::class.java)
-            is Constructor<*> -> mXposedInterface.hook(method, priority, LsposedHooker::class.java)
-            else -> throw IllegalArgumentException("Unsupported member type: ${method.javaClass.name}")
-        }
-
-        return UnhookParams(
-            mOrigin = { unhookOriginal.origin },
-            mUnhook = { unhookOriginal.unhook() },
-        ).also {
-            impl.unhookParamsInner = it
-            mUnhooks.add(it)
-        }
+        return factory.register(priority, callback) { if (factory.isEmpty()) HookerStore.remove(target) }
+            .also { mUnhooks.add(it) }
     }
 
     override fun hooker(
         method: Method,
-        callback: HookerFunction.() -> Unit
+        callback: HookerCallback,
     ) = buildLsposedHookerCallbackImpl(method, XposedInterface.PRIORITY_DEFAULT, callback)
 
     override fun hooker(
         method: Method,
         priority: Int,
-        callback: HookerFunction.() -> Unit
-    ) = buildLsposedHookerCallbackImpl(method, priority, callback)
-
-    override fun hooker(
-        method: Method,
-        callback: HookerCallback
-    ): UnhookParams? {
-        return hooker(method) {
-            callback.unhookParamsInner = { this.unhook }
-            onBefore { callback.onBefore(this) }
-            onAfter { callback.onAfter(this) }
-        }
-    }
-
-    override fun hooker(
-        method: Method,
-        priority: Int,
-        callback: HookerCallback
-    ): UnhookParams? {
-        return hooker(method, priority) {
-            callback.unhookParamsInner = { this.unhook }
-            onBefore { callback.onBefore(this) }
-            onAfter { callback.onAfter(this) }
-        }
-    }
-
-    override fun hooker(
-        method: Constructor<*>,
-        callback: HookerFunction.() -> Unit
-    ) = buildLsposedHookerCallbackImpl(method, XposedInterface.PRIORITY_DEFAULT, callback)
-
-    override fun hooker(
-        method: Constructor<*>,
-        priority: Int,
-        callback: HookerFunction.() -> Unit
+        callback: HookerCallback,
     ) = buildLsposedHookerCallbackImpl(method, priority, callback)
 
     override fun hooker(
         constructor: Constructor<*>,
-        callback: HookerCallback
-    ): UnhookParams? {
-        return hooker(constructor) {
-            callback.unhookParamsInner = { this.unhook }
-            onBefore { callback.onBefore(this) }
-            onAfter { callback.onAfter(this) }
-        }
-    }
+        callback: HookerCallback,
+    ) = buildLsposedHookerCallbackImpl(constructor, XposedInterface.PRIORITY_DEFAULT, callback)
 
     override fun hooker(
         constructor: Constructor<*>,
         priority: Int,
-        callback: HookerCallback
-    ): UnhookParams? {
-        return hooker(constructor, priority) {
-            callback.unhookParamsInner = { this.unhook }
-            onBefore { callback.onBefore(this) }
-            onAfter { callback.onAfter(this) }
-        }
-    }
-
-    override val unhooks: List<UnhookParams>
-        get() = mUnhooks
+        callback: HookerCallback,
+    ) = buildLsposedHookerCallbackImpl(constructor, priority, callback)
 
     override val api: Int
         get() {
@@ -154,9 +134,6 @@ internal class LsposedM(
     override val processName: String
         get() = mProcessName
 
-    override val modulePackageName: String?
-        get() = null // ASM bytecode injection will be implemented by the xpler2-compiler plugin.
-
     override val modulePath: String?
         get() = mXposedInterface.applicationInfo.sourceDir
 
@@ -181,65 +158,29 @@ internal class LsposedM(
         return mXposedInterface.deoptimize(constructor)
     }
 
-    @Throws(
-        InvocationTargetException::class,
-        IllegalArgumentException::class,
-        IllegalAccessException::class,
-    )
     override fun invokeOrigin(method: Method, instance: Any, vararg args: Any?): Any? {
         return mXposedInterface.invokeOrigin(method, instance, *args)
     }
 
-    @Throws(
-        InvocationTargetException::class,
-        IllegalArgumentException::class,
-        IllegalAccessException::class,
-    )
     override fun <T> invokeOrigin(constructor: Constructor<T>, instance: T, vararg args: Any?) {
         instance ?: throw IllegalArgumentException("instance is null")
         mXposedInterface.invokeOrigin(constructor, instance, *args)
     }
 
-    @Throws(
-        InvocationTargetException::class,
-        IllegalArgumentException::class,
-        IllegalAccessException::class,
-    )
     override fun invokeSpecial(method: Method, instance: Any, vararg args: Any?): Any? {
         return mXposedInterface.invokeSpecial(method, instance, *args)
     }
 
-    @Throws(
-        InvocationTargetException::class,
-        IllegalArgumentException::class,
-        IllegalAccessException::class,
-    )
     override fun <T> invokeSpecial(method: Constructor<T>, instance: T, vararg args: Any?) {
         instance ?: throw IllegalArgumentException("instance is null")
         mXposedInterface.invokeSpecial(method, instance, *args)
     }
 
-    @Throws(
-        InvocationTargetException::class,
-        IllegalArgumentException::class,
-        IllegalAccessException::class,
-        InstantiationException::class,
-    )
     override fun <T> newInstanceOrigin(constructor: Constructor<T>, vararg args: Any): T {
         return mXposedInterface.newInstanceOrigin(constructor, *args)
     }
 
-    @Throws(
-        InvocationTargetException::class,
-        IllegalArgumentException::class,
-        IllegalAccessException::class,
-        InstantiationException::class,
-    )
-    override fun <T, U> newInstanceSpecial(
-        constructor: Constructor<T>,
-        subClass: Class<U>,
-        vararg args: Any
-    ): U {
+    override fun <T, U> newInstanceSpecial(constructor: Constructor<T>, subClass: Class<U>, vararg args: Any): U {
         return mXposedInterface.newInstanceSpecial(constructor, subClass, *args)
     }
 
@@ -251,7 +192,6 @@ internal class LsposedM(
         return mXposedInterface.listRemoteFiles()
     }
 
-    @Throws(FileNotFoundException::class)
     override fun openRemoteFile(name: String): ParcelFileDescriptor {
         return mXposedInterface.openRemoteFile(name)
     }
@@ -264,6 +204,8 @@ internal class LsposedM(
     }
 
     override fun log(message: String) = log(message, null)
+
+    override fun logStackTraceString() = log(stackTraceString())
 
     override fun stackTraceString(): String {
         return Log.getStackTraceString(RuntimeException("stackTraceString"))

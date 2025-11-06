@@ -26,18 +26,18 @@
 }
 
 # Xpler2
--keep class ** extends io.github.xpler2.base.BaseXposedModule {
+-keep class ** extends io.github.xpler2.base.XposedEntrance {
     public <init>();
     public void initZygote(...);
     public void handleLoadPackage(...);
 }
--keep class ** extends io.github.xpler2.base.BaseLsposedModule {
+-keep class ** extends io.github.xpler2.base.LsposedEntrance {
     public <init>(...);
     public void onPackageLoaded(...);
     public void onSystemServerLoaded(...);
 }
 -keep,allowobfuscation class io.github.xpler2.callback.HookerCallback { *; }
--keep,allowobfuscation class io.github.xpler2.callback.HookerCallback {
+-keep,allowobfuscation class ** extends io.github.xpler2.callback.HookerCallback {
     getModule();
     getUnhook(...);
     onBefore(...);
@@ -50,14 +50,11 @@
     onBefore(...);
     onAfter(...);
 }
--keep,allowobfuscation class io.github.xpler2.hooker.HookerExtKt {
-    hooker*(...);
-}
--keepclassmembers class io.github.xpler2.impl.LsposedHooker {
+-keepclassmembers class io.github.xpler2.base.LsposedModule$Hooker {
     public static *** before(...);
     public static *** after(...);
 }
--keepclassmembers class io.github.xpler2.impl.XposedHooker {
+-keepclassmembers class io.github.xpler2.base.XposedModule$Hooker {
     beforeHookedMethod(...);
     afterHookedMethod(...);
 }
@@ -95,16 +92,17 @@
     log(...);
     stackTraceString(...);
 }
--keep,allowobfuscation class io.github.xpler2.XplerModuleInterfaceKt {
+-keep,allowobfuscation class io.github.xpler2.ExtKt {
     get*();
     set*(...);
     logger(...);
+    hooker(...);
 }
 -keep class io.github.xpler2.XplerModuleStatus {
     *;
 }
 -keep class ** implements io.github.xpler2.XplerModuleStatus {
-    *;
+    get*(...);
 }
 -keep,allowobfuscation class io.github.xpler2.XplerLogger {
     logger(...);

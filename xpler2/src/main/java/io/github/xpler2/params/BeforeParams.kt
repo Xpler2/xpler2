@@ -10,6 +10,11 @@ data class BeforeParams(
     private val mReturnAndSkip: (Any?) -> Unit,
     private val mThrowAndSkip: (Throwable?) -> Unit,
 ) {
+    private var skipped: Boolean = false
+
+    internal val isSkipped: Boolean
+        get() = skipped
+
     val member get() = mMember.invoke()
 
     val method get() = mMember.invoke() as Method
@@ -22,9 +27,15 @@ data class BeforeParams(
 
     inline fun <reified T> instanceOfOrNull(): T? = instance as? T
 
-    fun returnAndSkip(result: Any?) = mReturnAndSkip.invoke(result)
+    fun returnAndSkip(result: Any?) {
+        skipped = true
+        mReturnAndSkip.invoke(result)
+    }
 
-    fun throwAndSkip(throwable: Throwable?) = mThrowAndSkip.invoke(throwable)
+    fun throwAndSkip(throwable: Throwable?) {
+        skipped = true
+        mThrowAndSkip.invoke(throwable)
+    }
 
     override fun toString(): String {
         // format json
