@@ -27,3 +27,7 @@
 -keep,allowobfuscation class io.github.xpler_example.module.InitJava {
     public static **(io.github.xpler2.XplerModuleInterface);
 }
+
+-assumenosideeffects class kotlin.jvm.internal.Intrinsics {
+    public static void check**(...);
+}

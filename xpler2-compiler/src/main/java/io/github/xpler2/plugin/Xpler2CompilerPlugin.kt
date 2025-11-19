@@ -1,9 +1,9 @@
 package io.github.xpler2.plugin
 
+import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.gradle.AppPlugin
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import io.github.xpler2.plugin.asm.Xpler2AsmVisitorFactory
 import io.github.xpler2.plugin.compiler.task.Xpler2CompilerTask
 import org.gradle.api.Plugin
@@ -60,11 +60,11 @@ class Xpler2CompilerPlugin : Plugin<Project> {
         )
 
         // asm transform
-        val appModuleExtension = target.extensions.getByType(BaseAppModuleExtension::class.java)
+        val applicationExtension = target.extensions.getByType(ApplicationExtension::class.java)
         val androidComponents = target.extensions.getByType(AndroidComponentsExtension::class.java)
         androidComponents.onVariants { variant ->
             val variantName = variant.name
-            val applicationId = appModuleExtension.defaultConfig.applicationId
+            val applicationId = applicationExtension.defaultConfig.applicationId
 
             variant.instrumentation.apply {
                 transformClassesWith(

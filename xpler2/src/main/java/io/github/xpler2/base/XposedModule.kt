@@ -1,11 +1,6 @@
 package io.github.xpler2.base
 
-import android.content.Context
 import android.content.SharedPreferences
-import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
-import android.content.pm.PackageManager.PackageInfoFlags
-import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import de.robv.android.xposed.IXposedHookZygoteInit
@@ -15,7 +10,6 @@ import io.github.xpler2.callback.HookerCallback
 import io.github.xpler2.params.AfterParams
 import io.github.xpler2.params.BeforeParams
 import io.github.xpler2.params.UnhookParams
-import java.io.File
 import java.lang.reflect.Constructor
 import java.lang.reflect.Member
 import java.lang.reflect.Method
@@ -139,19 +133,6 @@ internal class XposedModule(
 
     override val modulePath: String?
         get() = mStartupParam.modulePath
-
-    override fun modulePackageInfo(context: Context): PackageInfo? {
-        val moduleFile = modulePath?.let { File(it) } ?: return null
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val flags = PackageInfoFlags.of(PackageManager.GET_ACTIVITIES.toLong())
-            context.packageManager.getPackageArchiveInfo(moduleFile.absolutePath, flags)
-        } else {
-            context.packageManager.getPackageArchiveInfo(
-                moduleFile.absolutePath,
-                PackageManager.GET_ACTIVITIES
-            )
-        }
-    }
 
     override fun deoptimize(method: Method): Boolean {
         throw UnsupportedOperationException("current xposed api does not support `deoptimize`")

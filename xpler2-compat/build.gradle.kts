@@ -2,11 +2,10 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
 }
 
 android {
-    namespace = "io.github.xpler2"
+    namespace = "io.github.xpler2.compat"
     compileSdk = 36
 
     defaultConfig {

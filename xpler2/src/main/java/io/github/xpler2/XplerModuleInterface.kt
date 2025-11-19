@@ -93,7 +93,7 @@ interface XplerModuleInterface {
 
     fun moduleResources(context: Context): Resources?
 
-    fun injectResource(resources: Resources)
+    fun injectResource(resources: Resources): Int
 
     @Throws(UnsupportedOperationException::class)
     fun deoptimize(method: Method): Boolean

@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.1"
+agp = "9.0.0-beta01"
 kotlin = "2.2.10"
 coreKtx = "1.17.0"
 lifecycleRuntimeKtx = "2.9.3"
@@ -10,7 +10,7 @@ publish = "0.34.0"
 xposed-api = "82"
 lspxposed-api = "100"
 lspxposed-service = "100-1.0.0"
-xpler2 = "0.0.5"
+xpler2 = "0.0.6"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,7 +32,6 @@ xpler2 = { group = "io.github.xpler2", name = "xpler2", version.ref = "xpler2" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "publish" }

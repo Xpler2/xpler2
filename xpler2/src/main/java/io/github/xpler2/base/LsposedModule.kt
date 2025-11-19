@@ -137,19 +137,6 @@ internal class LsposedModule(
     override val modulePath: String?
         get() = mXposedInterface.applicationInfo.sourceDir
 
-    override fun modulePackageInfo(context: Context): PackageInfo? {
-        val moduleFile = modulePath?.let { File(it) } ?: return null
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val flags = PackageInfoFlags.of(PackageManager.GET_ACTIVITIES.toLong())
-            context.packageManager.getPackageArchiveInfo(moduleFile.absolutePath, flags)
-        } else {
-            context.packageManager.getPackageArchiveInfo(
-                moduleFile.absolutePath,
-                PackageManager.GET_ACTIVITIES
-            )
-        }
-    }
-
     override fun deoptimize(method: Method): Boolean {
         return mXposedInterface.deoptimize(method)
     }
