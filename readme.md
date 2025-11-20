@@ -1,5 +1,7 @@
 # Xpler2
 
+![maven-central](https://img.shields.io/maven-central/v/io.github.xpler2/xpler2)
+
 Xposed Kotlin 开发包, 更适合Kotlin的编码风格。
 
 Xpler2 在原 Xposed Api 基础上进一步封装, 使其支持Kotlin的DSL特性, 更简洁的编写Hook逻辑。

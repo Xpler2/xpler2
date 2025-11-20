@@ -1,5 +1,6 @@
 [versions]
-agp = "9.0.0-beta01"
+agp9 = "9.0.0-beta01"
+agp8 = "8.13.1"
 kotlin = "2.2.10"
 coreKtx = "1.17.0"
 lifecycleRuntimeKtx = "2.9.3"
@@ -10,7 +11,7 @@ publish = "0.34.0"
 xposed-api = "82"
 lspxposed-api = "100"
 lspxposed-service = "100-1.0.0"
-xpler2 = "0.0.6"
+xpler2 = "0.0.7"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -22,7 +23,7 @@ androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
-android-tools-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+android-tools-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp8" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 xposed-api = { group = "de.robv.android.xposed", name = "api", version.ref = "xposed-api" }
 libxposed-api = { group = "io.github.libxposed", name = "api", version.ref = "lspxposed-api" }
@@ -30,8 +31,9 @@ libxposed-service = { group = "io.github.libxposed", name = "service", version.r
 xpler2 = { group = "io.github.xpler2", name = "xpler2", version.ref = "xpler2" }
 
 [plugins]
-android-application = { id = "com.android.application", version.ref = "agp" }
-android-library = { id = "com.android.library", version.ref = "agp" }
+android-application = { id = "com.android.application", version.ref = "agp8" }
+android-library = { id = "com.android.library", version.ref = "agp8" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "publish" }
