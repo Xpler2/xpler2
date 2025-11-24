@@ -2,10 +2,9 @@ package io.github.xpler2
 
 interface XplerModuleStatus {
     companion object {
-        @JvmStatic
-        fun getInstance(): XplerModuleStatus? {
-            return null // ASM bytecode injection will be implemented by the xpler2-compiler plugin.
-        }
+        @get:JvmStatic
+        val instance:XplerModuleStatus?
+            get() = null // ASM bytecode injection will be implemented by the xpler2-compiler plugin.
     }
 
     /**

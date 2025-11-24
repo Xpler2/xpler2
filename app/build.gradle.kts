@@ -21,6 +21,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    androidComponents {
+        onVariants(selector().all()) { variant ->
+            variant.outputs
+                .map { it as com.android.build.api.variant.impl.VariantOutputImpl }
+                .forEach { output ->
+                    output.outputFileName = "xpler2-example_${output.versionName.get()}_${variant.name}.apk"
+                }
+        }
+    }
     signingConfigs {
         create("sign") {
             storeFile = file("../keystore.jks")

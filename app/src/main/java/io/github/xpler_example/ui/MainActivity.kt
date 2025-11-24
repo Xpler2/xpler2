@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
                             .padding(innerPadding),
                         contentAlignment = Alignment.Center,
                     ) {
-                        val instance = XplerModuleStatus.getInstance()
+                        val instance = XplerModuleStatus.instance
                         if (instance?.isActivate == true) {
                             Text(
                                 text = "Activated. " +

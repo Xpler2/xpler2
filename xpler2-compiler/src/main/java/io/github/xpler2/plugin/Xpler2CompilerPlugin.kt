@@ -4,18 +4,18 @@ import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.gradle.AppPlugin
-import io.github.xpler2.plugin.asm.Xpler2AsmVisitorFactory
+import com.android.build.gradle.tasks.TransformClassesWithAsmTask
+import io.github.xpler2.plugin.asm.ASMVisitorFactory
+import io.github.xpler2.plugin.asm.generate.HookerEntitiesGenerate
+import io.github.xpler2.plugin.asm.generate.LsposedInitGenerate
+import io.github.xpler2.plugin.asm.generate.XposedInitGenerate
+import io.github.xpler2.plugin.compiler.cache.XplerGenerateCache
 import io.github.xpler2.plugin.compiler.task.Xpler2CompilerTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
-
-fun String.variantFormat(variant: String): String {
-    return this
-        .replace("{variant}", variant.lowercase())
-        .replace("{Variant}", variant.replaceFirstChar { it.uppercase() })
-}
+import java.io.File
 
 // `.aar` file structure reference: https://developer.android.com/studio/projects/android-library?hl=zh-cn#aar-contents
 class Xpler2CompilerPlugin : Plugin<Project> {
@@ -45,18 +45,12 @@ class Xpler2CompilerPlugin : Plugin<Project> {
             .dir("cache")
             .also { it.asFile.mkdirs() }
 
-        // intermediates directory
-        val intermediatesDirectory = target.layout
-            .buildDirectory
-            .dir("intermediates/classes/{variant}/transform{Variant}ClassesWithAsm/dirs")
-            .get()
-
         // task registration
         registerCompilerTask(
-            target, sourceFiles,
+            target,
+            sourceFiles,
             coreDirectory,
             cacheDirectory,
-            intermediatesDirectory,
         )
 
         // asm transform
@@ -68,7 +62,7 @@ class Xpler2CompilerPlugin : Plugin<Project> {
 
             variant.instrumentation.apply {
                 transformClassesWith(
-                    Xpler2AsmVisitorFactory::class.java,
+                    ASMVisitorFactory::class.java,
                     InstrumentationScope.ALL,
                 ) { params ->
                     params.cacheDirectory = cacheDirectory
@@ -84,8 +78,36 @@ class Xpler2CompilerPlugin : Plugin<Project> {
         sourceFiles: ConfigurableFileTree,
         coreDirectory: Directory,
         cacheDirectory: Directory,
-        intermediatesDirectory: Directory,
     ) {
+        // Generate necessary classes after ASM transform is completed
+        val generates = setOf(
+            XposedInitGenerate,
+            LsposedInitGenerate,
+            HookerEntitiesGenerate,
+        )
+        target.tasks.withType(TransformClassesWithAsmTask::class.java) { task ->
+            task.doFirst {
+                XplerGenerateCache.cache(cacheDirectory)?.generates?.forEach { path ->
+                    // println("XplerGenerate: remove cache $path")
+                    File(path).delete()
+                }
+                generates.forEach { generate ->
+                    generate.reset()
+                }
+            }
+            task.doLast {
+                val outputDir = task.classesOutputDir.get().asFile
+                val results = mutableSetOf<String>()
+                generates.forEach { generate ->
+                    generate.finish(outputDir)
+                        ?.let { path -> results.add(path) }
+                }
+                // println("XplerGenerate: into cache $results")
+                XplerGenerateCache(results).into(cacheDirectory)
+            }
+        }
+
+        // Configure compiler task
         val compilerTask = target.tasks.register(
             "xpler2Compile",
             Xpler2CompilerTask::class.java,
@@ -93,11 +115,12 @@ class Xpler2CompilerPlugin : Plugin<Project> {
             task.sourceFiles = sourceFiles
             task.coreDirectory = coreDirectory
             task.cacheDirectory = cacheDirectory
-            task.intermediatesPath = intermediatesDirectory.asFile.absolutePath
         }
-        target.tasks.named("preBuild") { it.dependsOn(compilerTask) }
+        target.tasks.named("preBuild") { task ->
+            task.dependsOn(compilerTask)
+        }
 
-        // dependency
+        // Dependencies
         target.dependencies.add(
             "implementation",
             target.fileTree(

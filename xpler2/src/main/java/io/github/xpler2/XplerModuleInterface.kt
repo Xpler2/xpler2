@@ -13,6 +13,12 @@ import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 
 interface XplerModuleInterface {
+    companion object {
+        @get:JvmStatic
+        val instance: XplerModuleInterface
+            get() = xplerModule
+    }
+
     /**
      * Hook method
      * ```

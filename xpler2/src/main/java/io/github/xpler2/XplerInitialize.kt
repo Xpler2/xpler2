@@ -59,7 +59,7 @@ package io.github.xpler2
  *
  * @property xposed Configuration for Xposed framework support.
  * @property lsposed Configuration for Lsposed framework support.
- * @property name The name of the module class, example: `com.example.ModuleInit`.
+ * @property name The name of the module class, example: `com.example.ModuleInit` or `$random$`.
  * @property description A brief description of the module, example: `This module does XYZ`.
  * @property scope An array of app package names that the module should be applied to.
  */
@@ -67,7 +67,7 @@ package io.github.xpler2
 @Retention(AnnotationRetention.BINARY)
 annotation class XplerInitialize(
     /**
-     * Initialize the module class name
+     * Initialize the module class name, If you want a random entrance, you can try using `$random$`
      */
     val name: String,
 

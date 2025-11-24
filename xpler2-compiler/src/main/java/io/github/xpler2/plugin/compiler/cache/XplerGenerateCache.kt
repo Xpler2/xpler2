@@ -1,21 +1,17 @@
-package io.github.xpler2.plugin.compiler.bean
+package io.github.xpler2.plugin.compiler.cache
 
-import io.github.xpler2.plugin.variantFormat
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.gradle.api.file.Directory
-import java.io.File
 
 @Serializable
-data class XplerInitializeCache(
-    val sourcePath: String,
-    val intermediatesPath: String,
-    val initializeBean: XplerInitializeBean,
+data class XplerGenerateCache(
+    val generates: Set<String>,
 ) {
     companion object {
-        const val NAME = "xpler_initialize_cache.json"
+        const val NAME = "xpler_generates.json"
 
-        fun cache(cacheDirectory: Directory): XplerInitializeCache? {
+        fun cache(cacheDirectory: Directory): XplerGenerateCache? {
             val cacheFile = cacheDirectory.file(NAME).asFile
                 .also { it.parentFile.mkdirs() }
             if (!cacheFile.canRead()) return null
@@ -32,6 +28,4 @@ data class XplerInitializeCache(
     fun toJson(): String {
         return Json.Default.encodeToString(this)
     }
-
-    fun intermediatesFile(variant: String) = File(intermediatesPath.variantFormat(variant))
 }
