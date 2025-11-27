@@ -84,15 +84,14 @@ class Xpler2CompilerPlugin : Plugin<Project> {
             XposedInitGenerate,
             LsposedInitGenerate,
             HookerEntitiesGenerate,
-        )
+        ).onEach { generate ->
+            generate.reset()
+        }
         target.tasks.withType(TransformClassesWithAsmTask::class.java) { task ->
             task.doFirst {
                 XplerGenerateCache.cache(cacheDirectory)?.generates?.forEach { path ->
                     // println("XplerGenerate: remove cache $path")
                     File(path).delete()
-                }
-                generates.forEach { generate ->
-                    generate.reset()
                 }
             }
             task.doLast {
