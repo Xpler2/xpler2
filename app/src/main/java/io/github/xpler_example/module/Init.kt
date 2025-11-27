@@ -11,7 +11,7 @@ import io.github.xpler2.hooker.HookerEntities
     description = "Xpler Example Module",
     scope = ["com.example.app"],
     xposed = true,
-    lsposed = true,
+    lsposed = false,
     lsposedCompatAnnotation = false,
 )
 fun init(module: XplerModuleInterface) {
@@ -21,9 +21,8 @@ fun init(module: XplerModuleInterface) {
         if (module.processName.indexOf(":") != -1) return // skip sub-processes
         Log.i("Xpler2", "[Xpler2]Kotlin-> init called in packageName: `${module.packageName}`, process: ${module.processName}")
 
-        val tinkerApplicationClazz = module.classLoader.loadClass("com.example.app.MyApplication")
-        val onCreateMethod = tinkerApplicationClazz.getDeclaredMethod("onCreate")
-
+        val applicationClazz = module.classLoader.loadClass("com.example.app.MyApplication")
+        val onCreateMethod = applicationClazz.getDeclaredMethod("onCreate")
         onCreateMethod.hooker {
             onBefore {
                 module.log("[Xpler2]Kotlin-> onCreate called in Application: $this")
@@ -34,7 +33,6 @@ fun init(module: XplerModuleInterface) {
                 HookerEntities.collect()
             }
         }
-
     } catch (e: Throwable) {
         module.log("[Xpler2]Kotlin-> not init.", e)
     }
