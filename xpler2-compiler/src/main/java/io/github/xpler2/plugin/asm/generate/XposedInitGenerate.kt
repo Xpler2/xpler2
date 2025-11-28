@@ -29,7 +29,7 @@ object XposedInitGenerate : BaseGenerate() {
         return path.resolve("$initClassName.class").also {
             it.delete()
             it.parentFile.mkdirs()
-            println("XposedInit class: ${it.absolutePath}")
+            println("[XposedInit]: ${it.absolutePath}")
             it.writeBytes(generateByteCode())
         }.absolutePath
     }

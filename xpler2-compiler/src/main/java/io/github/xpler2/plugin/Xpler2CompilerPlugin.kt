@@ -1,6 +1,7 @@
 package io.github.xpler2.plugin
 
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.gradle.AppPlugin
@@ -69,6 +70,7 @@ class Xpler2CompilerPlugin : Plugin<Project> {
                     params.applicationId = applicationId
                     params.variant = variantName
                 }
+                setAsmFramesComputationMode(FramesComputationMode.COPY_FRAMES)
             }
         }
     }
@@ -80,6 +82,7 @@ class Xpler2CompilerPlugin : Plugin<Project> {
         cacheDirectory: Directory,
     ) {
         // Generate necessary classes after ASM transform is completed
+        XplerGenerateCache.cache(cacheDirectory)?.generates?.forEach { path -> File(path).delete() }
         val generates = setOf(
             XposedInitGenerate,
             LsposedInitGenerate,
@@ -88,12 +91,6 @@ class Xpler2CompilerPlugin : Plugin<Project> {
             generate.reset()
         }
         target.tasks.withType(TransformClassesWithAsmTask::class.java) { task ->
-            task.doFirst {
-                XplerGenerateCache.cache(cacheDirectory)?.generates?.forEach { path ->
-                    // println("XplerGenerate: remove cache $path")
-                    File(path).delete()
-                }
-            }
             task.doLast {
                 val outputDir = task.classesOutputDir.get().asFile
                 val results = mutableSetOf<String>()

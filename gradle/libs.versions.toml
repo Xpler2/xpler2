@@ -11,7 +11,7 @@ publish = "0.34.0"
 xposed-api = "82"
 lspxposed-api = "100"
 lspxposed-service = "100-1.0.0"
-xpler2 = "0.0.8"
+xpler2 = "0.0.10"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

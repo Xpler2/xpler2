@@ -28,6 +28,7 @@ class XplerInitClassVisitor(
 
         // Collect HookerItem.
         if (annotation.className == "io.github.xpler2.hooker.HookerItem") {
+            println("[collect]: ${ownerName.replace("/", ".")}")
             HookerEntitiesGenerate.addEntity(ownerName)
             return null // @HookerItem annotations are not retained
         }

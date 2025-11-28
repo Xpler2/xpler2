@@ -4,9 +4,9 @@ import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.ClassContext
 import com.android.build.api.instrumentation.ClassData
 import com.android.build.api.instrumentation.InstrumentationParameters
-import io.github.xpler2.plugin.asm.cls.XplerHookerEntitiesClassVisitor
 import io.github.xpler2.plugin.asm.cls.LsposedClassVisitor
 import io.github.xpler2.plugin.asm.cls.XplerBaseModuleClassVisitor
+import io.github.xpler2.plugin.asm.cls.XplerHookerEntitiesClassVisitor
 import io.github.xpler2.plugin.asm.cls.XplerInitClassVisitor
 import io.github.xpler2.plugin.asm.cls.XplerModuleStatusClassVisitor
 import io.github.xpler2.plugin.compiler.cache.XplerInitializeCache
@@ -94,10 +94,26 @@ abstract class ASMVisitorFactory : AsmClassVisitorFactory<ASMVisitorFactory.Para
             .replace(".kt", "Kt")
             .replace(File.separator, ".")
 
-        return (classData.className.indexOf("io.github.libxposed.") != -1
-                || classData.className.indexOf("io.github.xpler2.") != -1
-                || classData.interfaces.indexOfFirst { it.startsWith("io.github.xpler2.") } != -1
-                || classData.classAnnotations.indexOfFirst { it.startsWith("io.github.xpler2.") } != -1
-                || sourceName.indexOf(classData.className) != -1)
+        if (classData.className.startsWith("io.github.libxposed.")) {
+            return true
+        }
+
+        if (classData.className.startsWith("io.github.xpler2.")) {
+            return true
+        }
+
+        if (classData.interfaces.any { it.startsWith("io.github.xpler2.") }) {
+            return true
+        }
+
+        if (classData.classAnnotations.any { it.startsWith("io.github.xpler2.") }) {
+            return true
+        }
+
+        if (sourceName.indexOf(classData.className) != -1) {
+            return true
+        }
+
+        return false
     }
 }

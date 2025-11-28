@@ -36,7 +36,7 @@ abstract class BaseModule : XplerModuleInterface {
 
     @SuppressWarnings("all")
     @SuppressLint("PrivateApi")
-    override fun moduleResources(context: Context): Resources? {
+    override fun moduleResources(resources: Resources): Resources? {
         if (modulePath == null)
             throw IllegalArgumentException("modulePath is null")
 
@@ -49,8 +49,8 @@ abstract class BaseModule : XplerModuleInterface {
 
             Resources(
                 assetManager,
-                context.resources.displayMetrics,
-                context.resources.configuration
+                resources.displayMetrics,
+                resources.configuration
             )
         } catch (e: Exception) {
             null

@@ -24,7 +24,7 @@ object HookerEntitiesGenerate : BaseGenerate() {
             .also {
                 it.delete()
                 it.parentFile.mkdirs()
-                println("HookerEntitiesStore class: ${it.absolutePath}")
+                println("[HookerEntitiesStore]: ${it.absolutePath}")
                 it.writeBytes(generateByteCode())
             }.absolutePath
     }

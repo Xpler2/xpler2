@@ -29,7 +29,7 @@ object LsposedInitGenerate : BaseGenerate() {
         return path.resolve("$initClassName.class").also {
             it.delete()
             it.parentFile.mkdirs()
-            println("LsposedInit class: ${it.absolutePath}")
+            println("[LsposedInit]: ${it.absolutePath}")
             it.writeBytes(generateByteCode())
         }.absolutePath
     }

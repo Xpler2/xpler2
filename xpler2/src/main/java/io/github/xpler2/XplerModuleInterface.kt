@@ -97,7 +97,7 @@ interface XplerModuleInterface {
 
     fun modulePackageInfo(context: Context): PackageInfo?
 
-    fun moduleResources(context: Context): Resources?
+    fun moduleResources(resources: Resources): Resources?
 
     fun injectResource(resources: Resources): Int
 
