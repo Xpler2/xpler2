@@ -9,7 +9,7 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Type
 
 // Inject module initialization
-class Xpler2InitMethodVisitor(
+class XplerInitializeMethodVisitor(
     api: Int,
     methodVisitor: MethodVisitor,
     private val ownerName: String,
@@ -19,7 +19,6 @@ class Xpler2InitMethodVisitor(
     private val applicationId: String?,
     private val variant: String,
 ) : MethodVisitor(api, methodVisitor) {
-
     val initial: XplerInitializeBean
         get() = initializeCache.initializeBean
 

@@ -136,7 +136,7 @@ object XplerInitializeParser {
 
     private fun parseBoolean(value: String?, default: Boolean): Boolean {
         if (value == null) return default
-        return value.toBoolean() == true
+        return value.toBoolean()
     }
 
     private fun parseString(value: String?, default: String): String {

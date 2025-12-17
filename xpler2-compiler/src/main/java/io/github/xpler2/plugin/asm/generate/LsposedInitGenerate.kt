@@ -20,18 +20,20 @@ object LsposedInitGenerate : BaseGenerate() {
         domainMethodName = null
     }
 
-    override fun finish(path: File): String? {
-        if (!isEnabled) return null
-        if (initClassName == null) throw NullPointerException("LsposedInitGenerate.lsposedInit is null")
-        if (domainClassName == null) throw NullPointerException("LsposedInitGenerate.domainClassName is null")
-        if (domainMethodName == null) throw NullPointerException("LsposedInitGenerate.domainMethodName is null")
+    override fun finish(path: File): Set<String> {
+        if (!isEnabled) return emptySet()
+        requireNotNull(initClassName) { "LsposedInitGenerate.lsposedInit is null" }
+        requireNotNull(domainClassName) { "LsposedInitGenerate.domainClassName is null" }
+        requireNotNull(domainMethodName) { "LsposedInitGenerate.domainMethodName is null" }
 
-        return path.resolve("$initClassName.class").also {
-            it.delete()
-            it.parentFile.mkdirs()
-            println("[LsposedInit]: ${it.absolutePath}")
-            it.writeBytes(generateByteCode())
-        }.absolutePath
+        return setOf(
+            path.resolve("$initClassName.class").also {
+                it.delete()
+                it.parentFile.mkdirs()
+                println("[LsposedInit]: ${it.absolutePath}")
+                it.writeBytes(generateByteCode())
+            }.absolutePath
+        )
     }
 
     override fun generateByteCode(): ByteArray {

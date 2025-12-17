@@ -1,16 +1,14 @@
 package io.github.xpler2.plugin.asm.cls
 
 import io.github.xpler2.plugin.asm.base.BaseClassVisitor
-import io.github.xpler2.plugin.asm.generate.HookerEntitiesGenerate
-import io.github.xpler2.plugin.asm.method.Xpler2InitMethodVisitor
+import io.github.xpler2.plugin.asm.method.XplerInitializeMethodVisitor
 import io.github.xpler2.plugin.compiler.cache.XplerInitializeCache
-import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 
-class XplerInitClassVisitor(
+class XplerInitializeClassVisitor(
     api: Int,
     classVisitor: ClassVisitor,
     initializeCache: XplerInitializeCache,
@@ -23,19 +21,6 @@ class XplerInitClassVisitor(
     applicationId,
     variant
 ) {
-    override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor? {
-        val annotation = Type.getType(descriptor)
-
-        // Collect HookerItem.
-        if (annotation.className == "io.github.xpler2.hooker.HookerItem") {
-            println("[collect]: ${ownerName.replace("/", ".")}")
-            HookerEntitiesGenerate.addEntity(ownerName)
-            return null // @HookerItem annotations are not retained
-        }
-
-        return super.visitAnnotation(descriptor, visible)
-    }
-
     override fun visitMethod(
         access: Int,
         name: String,
@@ -48,7 +33,7 @@ class XplerInitClassVisitor(
         val argumentTypes = Type.getArgumentTypes(descriptor)
         val singleParam = argumentTypes.singleOrNull()
         if (isPublicStatic && singleParam?.className == "io.github.xpler2.XplerModuleInterface") {
-            return Xpler2InitMethodVisitor(
+            return XplerInitializeMethodVisitor(
                 api = api,
                 methodVisitor = super.visitMethod(
                     access,

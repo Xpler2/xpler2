@@ -20,18 +20,20 @@ object XposedInitGenerate : BaseGenerate() {
         domainMethodName = null
     }
 
-    override fun finish(path: File): String? {
-        if (!isEnabled) return null
-        if (initClassName == null) throw NullPointerException("XposedInitGenerate.xposedInit is null")
-        if (domainClassName == null) throw NullPointerException("XposedInitGenerate.domainClassName is null")
-        if (domainMethodName == null) throw NullPointerException("XposedInitGenerate.domainMethodName is null")
+    override fun finish(path: File): Set<String> {
+        if (!isEnabled) return emptySet()
+        requireNotNull(initClassName) { "XposedInitGenerate.lsposedInit is null" }
+        requireNotNull(domainClassName) { "XposedInitGenerate.domainClassName is null" }
+        requireNotNull(domainMethodName) { "XposedInitGenerate.domainMethodName is null" }
 
-        return path.resolve("$initClassName.class").also {
-            it.delete()
-            it.parentFile.mkdirs()
-            println("[XposedInit]: ${it.absolutePath}")
-            it.writeBytes(generateByteCode())
-        }.absolutePath
+        return setOf(
+            path.resolve("$initClassName.class").also {
+                it.delete()
+                it.parentFile.mkdirs()
+                println("[XposedInit]: ${it.absolutePath}")
+                it.writeBytes(generateByteCode())
+            }.absolutePath
+        )
     }
 
     override fun generateByteCode(): ByteArray {

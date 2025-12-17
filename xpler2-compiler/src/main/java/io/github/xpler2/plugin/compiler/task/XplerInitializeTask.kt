@@ -14,7 +14,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
-open class Xpler2CompilerTask : DefaultTask() {
+open class XplerInitializeTask : DefaultTask() {
     private val xplerInitializeBeanMaps = mutableMapOf<File, List<XplerInitializeBean?>>()
 
     @get:InputFiles

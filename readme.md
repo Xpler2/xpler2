@@ -106,56 +106,6 @@ fun domain(module: XplerModuleInterface) {
 }
 ```
 
-## Hook实体
-
-为了方便模块化开发和管理, xpler2支持以的Entity形式来书写hook逻辑, 只需要继承 `HookerEntity` 并通过
-`@HookerItem` 标记, compiler plugin会自动将它们收集起来; 至于 `@HookerItem` 注解, 则会在
-compiler plugin完成收集后自动移除.
-
-```kotlin
-@HookerItem
-class KotlinEntity : HookerEntity() {
-    override val isEnabled: Boolean
-        get() = true
-
-    override val priority: Int
-        get() = 100
-
-    override fun target(): Member? {
-        try {
-            val cls = module.classLoader.loadClass("com.example.app.MainActivity")
-            return cls.getMethod("onCreate", Bundle::class.java)
-        } catch (t: Throwable) {
-            Log.d("Xpler2", "target error: " + t.message, t)
-        }
-        return null
-    }
-
-    override fun onBefore(params: BeforeParams) {
-        Log.d("Xpler2", "KotlinEntity onBefore: $params")
-    }
-
-    override fun onAfter(params: AfterParams) {
-        Log.d("Xpler2", "KotlinEntity onAfter: $params")
-    }
-}
-```
-
-随后, 你就可以在合适的时机去收集并使用这些被注册的实体, compiler plugin会将它们交给
-`xposed/lsposed`, 比如:
-
-```kotlin
-@XplerInitialize(...)
-fun domain(module: XplerModuleInterface) {
-    Application::class.java.getDeclaredMethod("onCreate")
-        .hooker {
-            onAfter {
-                HookerEntities.collect()
-            }
-        }
-}
-```
-
 ## 运行
 
 最后, 点击右上角的Run按钮, 即可完成一个简单的Xposed模块, compiler plugin会自行解析

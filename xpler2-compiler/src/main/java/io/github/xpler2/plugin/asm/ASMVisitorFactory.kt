@@ -6,9 +6,8 @@ import com.android.build.api.instrumentation.ClassData
 import com.android.build.api.instrumentation.InstrumentationParameters
 import io.github.xpler2.plugin.asm.cls.LsposedClassVisitor
 import io.github.xpler2.plugin.asm.cls.XplerBaseModuleClassVisitor
-import io.github.xpler2.plugin.asm.cls.XplerHookerEntitiesClassVisitor
-import io.github.xpler2.plugin.asm.cls.XplerInitClassVisitor
-import io.github.xpler2.plugin.asm.cls.XplerModuleStatusClassVisitor
+import io.github.xpler2.plugin.asm.cls.XplerInitializeClassVisitor
+import io.github.xpler2.plugin.asm.cls.XplerStatusClassVisitor
 import io.github.xpler2.plugin.compiler.cache.XplerInitializeCache
 import org.gradle.api.file.Directory
 import org.gradle.api.tasks.Input
@@ -51,14 +50,6 @@ abstract class ASMVisitorFactory : AsmClassVisitorFactory<ASMVisitorFactory.Para
                 variant = params.variant,
             )
 
-            cls == "io.github.xpler2.hooker.HookerEntities" -> XplerHookerEntitiesClassVisitor(
-                api = Opcodes.ASM9,
-                classVisitor = nextClassVisitor,
-                initializeCache = initializeCache,
-                applicationId = params.applicationId,
-                variant = params.variant,
-            )
-
             cls == "io.github.xpler2.base.BaseModule" -> XplerBaseModuleClassVisitor(
                 api = Opcodes.ASM9,
                 classVisitor = nextClassVisitor,
@@ -67,7 +58,7 @@ abstract class ASMVisitorFactory : AsmClassVisitorFactory<ASMVisitorFactory.Para
                 variant = params.variant,
             )
 
-            cls == $$"io.github.xpler2.XplerModuleStatus$Companion" -> XplerModuleStatusClassVisitor(
+            cls == $$"io.github.xpler2.XplerModuleStatus$Companion" -> XplerStatusClassVisitor(
                 api = Opcodes.ASM9,
                 classVisitor = nextClassVisitor,
                 initializeCache = initializeCache,
@@ -75,7 +66,7 @@ abstract class ASMVisitorFactory : AsmClassVisitorFactory<ASMVisitorFactory.Para
                 variant = params.variant,
             )
 
-            else -> XplerInitClassVisitor(
+            else -> XplerInitializeClassVisitor(
                 api = Opcodes.ASM9,
                 classVisitor = nextClassVisitor,
                 initializeCache = initializeCache,

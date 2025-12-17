@@ -95,7 +95,6 @@
 -keep,allowobfuscation class io.github.xpler2.ExtKt {
     get*();
     set*(...);
-    logger(...);
     hooker(...);
 }
 -keep class io.github.xpler2.XplerModuleStatus {

@@ -1,6 +1,5 @@
 package io.github.xpler2
 
-import android.content.Context
 import io.github.xpler2.callback.HookerCallback
 import io.github.xpler2.callback.HookerFunction
 import io.github.xpler2.callback.HookerFunctionImpl
@@ -12,12 +11,6 @@ import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 
 internal lateinit var xplerModule: XplerModuleInterface
-
-fun Context.logger(message: String) = logger(message, null)
-
-fun Context.logger(message: String, throwable: Throwable?) {
-    XplerLogger.logger(message, throwable)
-}
 
 fun XplerModuleInterface.hooker(method: Method, callback: HookerFunction.() -> Unit): UnhookParams? {
     val impl = HookerFunctionImpl().apply(callback)

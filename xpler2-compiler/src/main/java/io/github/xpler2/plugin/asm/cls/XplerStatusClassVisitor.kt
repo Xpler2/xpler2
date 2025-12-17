@@ -6,7 +6,7 @@ import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 
-class XplerModuleStatusClassVisitor(
+class XplerStatusClassVisitor(
     api: Int,
     classVisitor: ClassVisitor,
     initializeCache: XplerInitializeCache,

@@ -7,11 +7,10 @@ import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.tasks.TransformClassesWithAsmTask
 import io.github.xpler2.plugin.asm.ASMVisitorFactory
-import io.github.xpler2.plugin.asm.generate.HookerEntitiesGenerate
 import io.github.xpler2.plugin.asm.generate.LsposedInitGenerate
 import io.github.xpler2.plugin.asm.generate.XposedInitGenerate
 import io.github.xpler2.plugin.compiler.cache.XplerGenerateCache
-import io.github.xpler2.plugin.compiler.task.Xpler2CompilerTask
+import io.github.xpler2.plugin.compiler.task.XplerInitializeTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileTree
@@ -86,7 +85,6 @@ class Xpler2CompilerPlugin : Plugin<Project> {
         val generates = setOf(
             XposedInitGenerate,
             LsposedInitGenerate,
-            HookerEntitiesGenerate,
         ).onEach { generate ->
             generate.reset()
         }
@@ -95,8 +93,7 @@ class Xpler2CompilerPlugin : Plugin<Project> {
                 val outputDir = task.classesOutputDir.get().asFile
                 val results = mutableSetOf<String>()
                 generates.forEach { generate ->
-                    generate.finish(outputDir)
-                        ?.let { path -> results.add(path) }
+                    results.addAll(generate.finish(outputDir))
                 }
                 // println("XplerGenerate: into cache $results")
                 XplerGenerateCache(results).into(cacheDirectory)
@@ -105,8 +102,8 @@ class Xpler2CompilerPlugin : Plugin<Project> {
 
         // Configure compiler task
         val compilerTask = target.tasks.register(
-            "xpler2Compile",
-            Xpler2CompilerTask::class.java,
+            "Xpler2Initialize",
+            XplerInitializeTask::class.java,
         ) { task ->
             task.sourceFiles = sourceFiles
             task.coreDirectory = coreDirectory

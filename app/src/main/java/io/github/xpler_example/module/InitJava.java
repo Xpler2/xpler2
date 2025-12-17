@@ -8,7 +8,6 @@ import java.lang.reflect.Method;
 
 import io.github.xpler2.XplerModuleInterface;
 import io.github.xpler2.callback.HookerCallback;
-import io.github.xpler2.hooker.HookerEntities;
 import io.github.xpler2.params.AfterParams;
 import io.github.xpler2.params.BeforeParams;
 
@@ -39,7 +38,6 @@ public class InitJava {
                 @Override
                 public void onAfter(@NonNull AfterParams params) {
                     getModule().log("[Xpler2]Java -> MyApplication onCreate finished.");
-                    HookerEntities.INSTANCE.collect();
                 }
             });
         } catch (Throwable e) {

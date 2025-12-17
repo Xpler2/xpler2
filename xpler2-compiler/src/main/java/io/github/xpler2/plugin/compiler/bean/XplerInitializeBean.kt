@@ -31,7 +31,7 @@ data class XplerInitializeBean(
             val length = Random.nextInt(safeFrom, safeUntil)
             val flagIndex = Random.nextInt(length)
 
-            val baseName = if (name.lowercase().equals($$"$random$", ignoreCase = true)) "" else name
+            val baseName = if (name.equals($$"$random$", ignoreCase = true)) "" else name
             val estimatedSize = baseName.length + length + flag.length
 
             return buildString(estimatedSize) {
