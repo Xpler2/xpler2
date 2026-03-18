@@ -1,12 +1,21 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     id("java-gradle-plugin")
-    id("org.jetbrains.kotlin.jvm")
-    id("org.jetbrains.kotlin.plugin.serialization")
-    id("com.vanniktech.maven.publish")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.maven.publish)
     id("signing")
 }
+
+val libVersion = providers.gradleProperty("libVersion").orElse(
+    providers.provider {
+        val properties = Properties()
+        rootDir.parentFile.resolve("gradle.properties").inputStream().use(properties::load)
+        properties.getProperty("libVersion")
+    }
+)
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -28,13 +37,13 @@ gradlePlugin {
     plugins {
         create("xpler2-compiler") {
             id = "io.github.xpler2.compiler"
-            implementationClass = "io.github.xpler2.plugin.Xpler2CompilerPlugin"
+            implementationClass = "io.github.xpler2.plugin.Xpler2Compiler"
         }
     }
 }
 
 mavenPublishing {
-    coordinates("io.github.xpler2", "compiler", "${project.properties["libVersion"]}")
+    coordinates("io.github.xpler2", "compiler", libVersion.get())
 
     pom {
         name.set("xpler2-compiler")

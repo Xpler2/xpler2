@@ -1,10 +1,12 @@
 # Xpler2
 
-![maven-central](https://img.shields.io/maven-central/v/io.github.xpler2/xpler2)
+![maven-central](https://img.shields.io/maven-central/v/io.github.xpler2/xpler2-api)
 
-Xposed/Lsposed Kotlin 开发包, 更适合Kotlin的编码风格。
+Xposed Kotlin 开发包, 更适合Kotlin的编码风格。
 
-Xpler2 在原 Xposed/Lsposed Api 基础上进行封装, 使其支持Kotlin的DSL特性, 更简洁的编写Hook逻辑。
+Xpler2 在原 Xposed Api 基础上进一步封装, 使其支持Kotlin的DSL特性, 更简洁的编写Hook逻辑。
+
+> 注意: 自 `0.0.20` 起将不支持纯Java项目, 并且xpler2不再支持Java入口
 
 ## 食用方法
 
@@ -12,123 +14,151 @@ Xpler2 在原 Xposed/Lsposed Api 基础上进行封装, 使其支持Kotlin的DSL
 // 在app模块的 build.gradle.kts 中添加以下内容
 plugins {
     ...
-    id("io.github.xpler2.compiler") version "<last-version>"
+    id("io.github.xpler2.compiler") version "<version>"
 }
 
 dependencies {
     ...
-    implementation("io.github.xpler2:xpler2:<last-version>")
+    implementation("io.github.xpler2:xpler2-api:<version>")
+    implementation("io.github.xpler2:xpler2-xposed:<version>")
 }
 ```
 
 ## 模块入口
 
-在项目中写入以下代码
+当前版本使用 `@XplerHint` 和 `@XposedHint` 标记唯一入口函数：
 
 ```kotlin
-// file: com.example.app.Init.kt
-
-@XplerInitialize(
-    name = "com.example.ModuleInit",
-    description = "This is a Kotlin module for Xpler.",
-    scope = ["com.example.app"],
-    xposed = false, // Turn off xposed support
-    lsposed = true
+@XposedHint(version = 82)
+@XplerHint(
+    description = "Example module",
+    scope = ["com.example.target"],
 )
-fun init(module: XplerModuleInterface) { // must be `public static` and parameter must be single XplerModuleInterface
-    module.log("Kotlin module initialized")
+fun init(module: XplerModuleInterface) {
+    module.log("module loaded: ${module.packageName}")
 }
 ```
 
-或者, 如果你需要不固定的入口类, 可以使用占位字符串 `$random$` 来代替, compiler plugin 将会自动将它随机.
+入口函数约束如下：
+
+- 必须是 Kotlin 顶层函数。
+- 只能有一个参数，类型必须是 `XplerModuleInterface`。
+- 有且只能有一个`@XplerHint`存在。
+
+`@XposedHint` 是 Xposed 开关：
+
+- 未添加 `@XposedHint` 时，不生成 Xposed 产物，也不会追加 Xposed API 依赖 (即使你可能已经增加了 `@XplerHint`)。
+
+## Hook DSL
+
+常见写法如下：
 
 ```kotlin
-// file: com.example.app.Init.kt
+package com.example.module
 
-@XplerInitialize(
-    name = $$"$random$",
-    description = "This is a Kotlin module for Xpler.",
-    scope = ["com.example.app"],
-    xposed = false, // Turn off xposed support
-    lsposed = true
+import io.github.xpler2.XplerHint
+import io.github.xpler2.XplerModuleInterface
+import io.github.xpler2.hooker
+import io.xpler2.github.xposed.XposedHint
+
+@XposedHint
+@XplerHint(
+    description = "Example module",
+    scope = ["com.example.target"],
 )
-fun init(module: XplerModuleInterface) { // must be `public static` and parameter must be single XplerModuleInterface
-    module.log("Kotlin module initialized")
+fun init(module: XplerModuleInterface) {
+    if (!module.isFirstPackage) return
+    if (module.packageName != "com.example.target") return
+    if (":" in module.processName) return
+
+    val targetClass = module.classLoader.loadClass("com.example.target.TargetClass")
+    val targetMethod = targetClass.getDeclaredMethod("targetMethod")
+
+    targetMethod.hooker {
+        onBefore {
+            module.log("before: $this")
+        }
+
+        onAfter {
+            module.log("after: $this")
+        }
+    }
 }
 ```
-
-> note: 入口方法名可随意定义, 但参数只允许有一个`XplerModuleInterface`, 并且访问权限必须是
-`public static`
 
 ## 模块状态
 
+模块 App 中直接通过：
+
 ```kotlin
-class ModuleMainActivity : Activity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        ...
-        val instance = XplerModuleStatus.instance
-        statusTv.text = "isActivate: ${instance?.isActivate}"
-        ...
-    }
+val status = XplerModuleStatus.instance
+
+if (status.isActivate) {
+    println("${status.frameworkName} / api=${status.apiVersion}")
 }
 ```
 
-## Hook逻辑
+## Xposed 专属能力
+
+如果你需要访问 Xposed 侧扩展对象，可以使用：
 
 ```kotlin
-@XplerInitialize(...)
-fun domain(module: XplerModuleInterface) {
-    val method = YouCustomFindUtil.findMethod(...)
+import io.xpler2.github.xposed.asXposed
 
-    // dsl
-    module.hooker(method) {
-        onBefore { // this scope is for BeforeParams
-            val first = this.args[0]
-            ...
-        }
-        onAfter { // this scope is for AfterParams
-            val isSkipped = this.isSkipped()
-            ...
-        }
-    }
+// asXposed
+module.asXposed?.run { xposed ->
+    xposed.log("hello from xposed")
+}
 
-    // anonymous inner class
-    module.hooker(method, object : HookerCallback() {
-        override fun onBefore(params: BeforeParams) {
-            val first = params.args[0]
-            ...
-        }
-        override fun onAfter(params: AfterParams) {
-            val isSkipped = params.isSkipped()
-            ...
-        }
-    })
+// withXposed
+module.withXposed {
+    this.log("hello from xposed")
 }
 ```
 
-## 运行
+在 `HookerCallback` / `HookerFunction` 作用域内，也可以直接使用 `withXposed { ... }`。
 
-最后, 点击右上角的Run按钮, 即可完成一个简单的Xposed模块, compiler plugin会自行解析
-`@XplerInitialize` 并完成模块入口`xposed/lsposed`的配置, 无需其它额外的操作.
+## 生成产物
 
-关于Xpler2文档及使用案例, 请查看本项目的`app`模块和相关方法注释
+执行构建后，编译器会在 `build/xpler2/` 下生成中间产物，常见文件包括：
 
-## 其它说明
+- `entry.json`
+- `libs/api-82.jar`
+- `<variant>/xposed/source/<random-entry>.kt`
+- `<variant>/xposed/source/XplerStatusProvider.kt`
+- `<variant>/xposed/proguard-rules.pro`
+- `<variant>/xposed/assets/xposed_init`
+- `<variant>/xposed/res/values/values.xml`
 
-- 若打算运行本项目,
-  你需要首先参考 [LSPosed-Wiki](https://github.com/LSPosed/LSPosed/wiki/Develop-Xposed-Modules-Using-Modern-Xposed-API#early-access)
-  拉取 [api](https://github.com/libxposed/api) 进行 `publishToMavenLocal`.
+另外，参与最终 manifest merge 的生成 manifest 由 AGP 接管，实际可在以下位置看到：
 
-- 注意, Xpler2使用kotlin编写, 不含kotlin相关依赖的纯java项目, 可能需要自行添加kotlin标准库
-  `kotlin-stdlib`的依赖支持。
+- `build/generated/manifests/xpler2GenerateConfig<Variant>/AndroidManifest.xml`
 
-- 另外，在release混淆时, 请注意保留你的混淆入口, 如:
+以上这些文件都属于`xpler2-compiler`插件的生成产物，不需要手工维护。
 
-  ```kotlin
-  -keep, allowobfuscation class com.example.app.Init { 
-      public static **(io.github.xpler2.XplerModuleInterface);
-  }
-  ```
+## 混淆
+
+`xpler2-api` 和 `xpler2-xposed` 自带一部分 consumer rules，但如果你的应用开启了混淆，仍建议显式保留入口文件对应的顶层函数，例如：
+
+```pro
+-keep,allowobfuscation class com.example.module.InitKt {
+    public static **(io.github.xpler2.XplerModuleInterface);
+}
+```
+
+本仓库示例可参考 `app/proguard-rules.pro`。
+
+## 示例工程
+
+当前仓库中的 [Init.kt](app/src/main/java/io/github/xpler/example/module/Init.kt)
+和 [MainActivity.kt](app/src/main/java/io/github/xpler/example/ui/MainActivity.kt) 就是最新可运行示例：
+
+- `Init.kt` 展示入口注解和 Hook DSL。
+- `MainActivity.kt` 展示 `XplerModuleStatus.instance` 的读取方式。
+
+## Lsposed
+
+关于Lsposed api-101, 需要等待至少有一个稳定的仓库发布后届时才再次加入
 
 ## 致谢
 

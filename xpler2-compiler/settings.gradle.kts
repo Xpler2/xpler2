@@ -1,5 +1,5 @@
+// xpler2-compiler/settings.gradle.kts
 pluginManagement {
-    includeBuild("xpler2-compiler")
     repositories {
         google {
             content {
@@ -14,6 +14,7 @@ pluginManagement {
         maven { setUrl("https://maven.aliyun.com/repository/public") }
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -22,9 +23,11 @@ dependencyResolutionManagement {
         mavenLocal()
         maven { setUrl("https://maven.aliyun.com/repository/public") }
     }
+    versionCatalogs {
+        create("libs") {
+            from(files("../gradle/libs.versions.toml"))
+        }
+    }
 }
 
-rootProject.name = "Xpler2"
-include(":app")
-include(":xpler2-api")
-include(":xpler2-xposed")
+rootProject.name = "xpler2-compiler"

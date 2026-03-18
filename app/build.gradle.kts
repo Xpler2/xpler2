@@ -4,15 +4,15 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.xpler2.compiler)
+    id("io.github.xpler2.compiler")
 }
 
 android {
-    namespace = "io.github.xpler_example"
+    namespace = "io.github.xpler.example"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "io.github.xpler_example"
+        applicationId = "io.github.xpler.example"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -64,7 +64,8 @@ android {
 }
 
 dependencies {
-    implementation(libs.xpler2)
+    implementation(project(":xpler2-api"))
+    implementation(project(":xpler2-xposed"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

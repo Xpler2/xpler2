@@ -20,11 +20,7 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keep,allowobfuscation class io.github.xpler_example.module.InitKt {
-    public static **(io.github.xpler2.XplerModuleInterface);
-}
-
--keep,allowobfuscation class io.github.xpler_example.module.InitJava {
+-keep,allowobfuscation class io.github.xpler.module.InitKt {
     public static **(io.github.xpler2.XplerModuleInterface);
 }
 
