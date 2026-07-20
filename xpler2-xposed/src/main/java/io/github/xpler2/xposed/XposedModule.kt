@@ -60,7 +60,7 @@ abstract class XposedModule : IXposedHookZygoteInit, IXposedHookLoadPackage, Xpl
         if (packageName != moduleApplicationId) return
 
         try {
-            val statusClazz = classLoader.loadClass("io.xpler2.github.xposed.XposedStatus")
+            val statusClazz = classLoader.loadClass("io.github.xpler2.xposed.XposedStatus")
 
             // getApiVersion
             statusClazz

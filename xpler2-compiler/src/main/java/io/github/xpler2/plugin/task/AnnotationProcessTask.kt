@@ -1,7 +1,6 @@
 package io.github.xpler2.plugin.task
 
 import io.github.xpler2.plugin.parser.XplerEntryResolver
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileTree
@@ -10,12 +9,17 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
+@DisableCachingByDefault(because = "Scans application sources and replaces generated entry metadata")
 abstract class AnnotationProcessTask : DefaultTask() {
     private val json = Json { prettyPrint = false }
 
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var sourceFiles: ConfigurableFileTree
 
     @get:Input

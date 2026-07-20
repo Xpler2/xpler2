@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "io.github.xpler2.bradge.xposed"
+    namespace = "io.github.xpler2.xposed"
     compileSdk = 36
 
     defaultConfig {

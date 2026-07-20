@@ -1,5 +1,10 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+val signingStoreFile = providers.gradleProperty("signingStoreFile")
+val signingStorePassword = providers.gradleProperty("signingStorePassword")
+val signingKeyAlias = providers.gradleProperty("signingKeyAlias")
+val signingKeyPassword = providers.gradleProperty("signingKeyPassword")
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -20,32 +25,28 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    androidComponents {
-        onVariants(selector().all()) { variant ->
-            variant.outputs
-                .map { it as com.android.build.api.variant.impl.VariantOutputImpl }
-                .forEach { output ->
-                    output.outputFileName = "xpler2-example_${output.versionName.get()}_${variant.name}.apk"
-                }
+    val releaseSigningConfig = if (
+        signingStoreFile.isPresent &&
+        signingStorePassword.isPresent &&
+        signingKeyAlias.isPresent &&
+        signingKeyPassword.isPresent
+    ) {
+        signingConfigs.create("release") {
+            storeFile = file(signingStoreFile.get())
+            storePassword = signingStorePassword.get()
+            keyAlias = signingKeyAlias.get()
+            keyPassword = signingKeyPassword.get()
         }
+    } else {
+        null
     }
-    signingConfigs {
-        create("sign") {
-            storeFile = file("../keystore.jks")
-            storePassword = "123456"
-            keyAlias = "Xpler2"
-            keyPassword = "123456"
-        }
-    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("sign")
-        }
-        debug {
-            signingConfig = signingConfigs.getByName("sign")
+            signingConfig = releaseSigningConfig
         }
     }
     buildFeatures {
@@ -55,10 +56,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlin {
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_11
-        }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_11
     }
 }
 

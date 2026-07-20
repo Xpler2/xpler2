@@ -31,6 +31,7 @@ kotlin {
 dependencies {
     implementation(libs.android.tools.gradle)
     implementation(libs.kotlinx.serialization.json)
+    testImplementation(kotlin("test"))
 }
 
 gradlePlugin {

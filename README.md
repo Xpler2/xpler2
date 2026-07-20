@@ -47,7 +47,8 @@ fun init(module: XplerModuleInterface) {
 
 `@XposedHint` 是 Xposed 开关：
 
-- 未添加 `@XposedHint` 时，不生成 Xposed 产物，也不会追加 Xposed API 依赖 (即使你可能已经增加了 `@XplerHint`)。
+- 未添加 `@XposedHint` 时，不生成 Xposed 入口、资源、Manifest 或混淆规则。
+- compiler 根据是否声明 `xpler2-xposed` 依赖提供 Xposed 编译 API，不在 Gradle Sync 阶段解析入口源码。
 
 ## Hook DSL
 
@@ -59,7 +60,7 @@ package com.example.module
 import io.github.xpler2.XplerHint
 import io.github.xpler2.XplerModuleInterface
 import io.github.xpler2.hooker
-import io.xpler2.github.xposed.XposedHint
+import io.github.xpler2.xposed.XposedHint
 
 @XposedHint
 @XplerHint(
@@ -103,7 +104,7 @@ if (status.isActivate) {
 如果你需要访问 Xposed 侧扩展对象，可以使用：
 
 ```kotlin
-import io.xpler2.github.xposed.asXposed
+import io.github.xpler2.xposed.asXposed
 
 // asXposed
 module.asXposed?.run { xposed ->

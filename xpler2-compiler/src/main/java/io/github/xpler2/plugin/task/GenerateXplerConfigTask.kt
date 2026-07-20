@@ -7,6 +7,7 @@ import io.github.xpler2.plugin.config.XplerConfigOutputs
 import io.github.xpler2.plugin.config.XplerConfigs
 import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -19,8 +20,10 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
+@DisableCachingByDefault(because = "Recreates variant-specific generated sources and Android resources")
 abstract class GenerateXplerConfigTask : DefaultTask() {
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -31,6 +34,9 @@ abstract class GenerateXplerConfigTask : DefaultTask() {
 
     @get:Input
     abstract val moduleApplicationId: Property<String>
+
+    @get:Input
+    abstract val xposedRuntimeAvailable: Property<Boolean>
 
     @get:Internal
     abstract val configDirectory: DirectoryProperty
@@ -54,6 +60,11 @@ abstract class GenerateXplerConfigTask : DefaultTask() {
         if (entry == null) {
             clearOutputDirectory(configRootDirectory)
             return
+        }
+        if (entry.xposedHint != null && !xposedRuntimeAvailable.get()) {
+            throw GradleException(
+                "`@XposedHint` requires an `io.github.xpler2:xpler2-xposed` dependency."
+            )
         }
 
         XplerConfigs.all.forEach { config ->

@@ -12,13 +12,11 @@ object XposedConfig : XplerConfig {
         resOutputPath = "$OUTPUT_DIRECTORY_NAME/res",
         manifestOutputPath = "$OUTPUT_DIRECTORY_NAME/manifest/AndroidManifest.xml",
     )
-    val bundledCompileOnlyResourcePaths = listOf("$RESOURCE_DIRECTORY/api-82.jar")
-
     fun createGeneratedEntryClassName(group: String = DEFAULT_ENTRY_CLASS_NAME_GROUP): String {
         return RandomIdentifierGenerator.createGeneratedEntryClassName(group)
     }
 
-    private const val XPOSED_MODULE_CLASS_NAME = "io.xpler2.github.xposed.XposedModule"
+    private const val XPOSED_MODULE_CLASS_NAME = "io.github.xpler2.xposed.XposedModule"
     private const val XPOSED_INIT_FILE = "xposed_init"
 
     override fun generate(context: XplerConfigContext) {
@@ -76,7 +74,7 @@ object XposedConfig : XplerConfig {
 
         val code = """
 import io.github.xpler2.XplerModuleStatus
-import io.xpler2.github.xposed.XposedStatus
+import io.github.xpler2.xposed.XposedStatus
 
 object ${XposedKeepRules.STATUS_PROVIDER_CLASS_NAME} : XplerModuleStatus {
     private val delegates = listOf<XplerModuleStatus>(
@@ -179,7 +177,6 @@ ${entry.xplerHint.scope.joinToString("\n") { "        <item>${it.escapeXml()}</i
     }
 
     private const val OUTPUT_DIRECTORY_NAME = "xposed"
-    private const val RESOURCE_DIRECTORY = "xposed"
     private const val DEFAULT_ENTRY_CLASS_NAME_GROUP = "x"
 }
 

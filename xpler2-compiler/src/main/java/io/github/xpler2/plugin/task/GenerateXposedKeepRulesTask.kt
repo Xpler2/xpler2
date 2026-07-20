@@ -11,7 +11,9 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
+@DisableCachingByDefault(because = "Generates variant-specific keep rules from entry metadata")
 abstract class GenerateXposedKeepRulesTask : DefaultTask() {
     private val json = Json { ignoreUnknownKeys = true }
 

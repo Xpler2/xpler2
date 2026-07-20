@@ -2,7 +2,6 @@ package io.github.xpler2.plugin
 
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.gradle.AppPlugin
-import io.github.xpler2.plugin.parser.XplerEntryResolver
 import io.github.xpler2.plugin.config.XposedConfig
 import io.github.xpler2.plugin.config.XposedKeepRules
 import io.github.xpler2.plugin.task.AnnotationProcessTask
@@ -29,9 +28,7 @@ class Xpler2Compiler : Plugin<Project> {
 
         registerBundledXposedApiDependency(
             target = target,
-            sourceFiles = sourceFiles,
             extractTask = extractBundledXposedApiTask,
-            generatedEntryClassName = generatedEntryClassName,
         )
 
         androidComponents.onVariants { variant ->
@@ -65,6 +62,7 @@ class Xpler2Compiler : Plugin<Project> {
             ) { task ->
                 task.entryFile.set(entryFile)
                 task.moduleApplicationId.set(variant.applicationId)
+                task.xposedRuntimeAvailable.convention(false)
                 task.configDirectory.set(buildDir)
                 task.sourceOutput.set(buildDir.dir(xposedOutputPaths.sourceOutputPath))
                 task.assetsOutput.set(buildDir.dir(xposedOutputPaths.assetsOutputPath))
@@ -80,6 +78,13 @@ class Xpler2Compiler : Plugin<Project> {
                 variant.proguardFiles.add(xposedKeepRulesTask.flatMap(GenerateXposedKeepRulesTask::outputFile))
             }
         }
+
+        target.afterEvaluate {
+            val xposedRuntimeAvailable = XposedDependencyConfigurer.isRuntimeAvailable(target)
+            target.tasks.withType(GenerateXplerConfigTask::class.java).configureEach { task ->
+                task.xposedRuntimeAvailable.set(xposedRuntimeAvailable)
+            }
+        }
     }
 
     private fun createSourceFiles(target: Project): ConfigurableFileTree {
@@ -91,9 +96,7 @@ class Xpler2Compiler : Plugin<Project> {
 
     private fun registerBundledXposedApiDependency(
         target: Project,
-        sourceFiles: ConfigurableFileTree,
         extractTask: TaskProvider<ExtractBundledLibrariesTask>,
-        generatedEntryClassName: String,
     ) {
         var isBundledDependencyRegistered = false
 
@@ -101,9 +104,7 @@ class Xpler2Compiler : Plugin<Project> {
             configuration.withDependencies { dependencies ->
                 if (isBundledDependencyRegistered) return@withDependencies
                 if (dependencies.any(::isXposedApiDependency)) return@withDependencies
-
-                val entry = XplerEntryResolver.resolve(sourceFiles.files, generatedEntryClassName)
-                if (entry.xposedHint == null) return@withDependencies
+                if (!XposedDependencyConfigurer.isRuntimeAvailable(target)) return@withDependencies
 
                 val bundledLibraries = createBundledXposedLibraryFiles(target, extractTask)
                 dependencies.add(target.dependencies.create(target.files(bundledLibraries)))
@@ -117,9 +118,10 @@ class Xpler2Compiler : Plugin<Project> {
             EXTRACT_BUNDLED_XPOSED_API_TASK_NAME,
             ExtractBundledLibrariesTask::class.java
         ) { task ->
-            task.resourcePaths.set(XposedConfig.bundledCompileOnlyResourcePaths)
+            task.resourcePaths.set(XposedDependencyConfigurer.bundledCompileOnlyResourcePaths)
             task.resourceHashes.set(
-                XposedConfig.bundledCompileOnlyResourcePaths.associateWith(BundledLibraryExtractor::resourceHash)
+                XposedDependencyConfigurer.bundledCompileOnlyResourcePaths
+                    .associateWith(BundledLibraryExtractor::resourceHash)
             )
             task.outputDirectory.set(target.layout.buildDirectory.dir("$BUILD_DIR_NAME/$LIBS_DIR_NAME"))
         }
