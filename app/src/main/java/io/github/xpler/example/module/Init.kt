@@ -5,7 +5,7 @@ import android.util.Log
 import io.github.xpler2.XplerHint
 import io.github.xpler2.XplerModuleInterface
 import io.github.xpler2.hooker
-import io.xpler2.github.xposed.XposedHint
+import io.github.xpler2.xposed.XposedHint
 
 @XplerHint(
     description = "Xpler Example Module",

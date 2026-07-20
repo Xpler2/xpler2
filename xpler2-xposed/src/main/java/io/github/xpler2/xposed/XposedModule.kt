@@ -1,4 +1,4 @@
-package io.xpler2.github.xposed
+package io.github.xpler2.xposed
 
 import android.annotation.SuppressLint
 import android.content.Context

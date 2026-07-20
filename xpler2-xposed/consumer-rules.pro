@@ -5,7 +5,7 @@
     public void handleLoadPackage(...);
 }
 
--keep class io.xpler2.github.xposed.XposedStatus {
+-keep class io.github.xpler2.xposed.XposedStatus {
     *;
 }
 
